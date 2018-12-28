@@ -12,7 +12,7 @@ https://github.com/TheCre8r/WME-BackEnd-Data/raw/master/WME-BED.user.js
 
 ## Version History
 
-2018.12.28.00
+2018.12.28.00 - Initial Release
 
 ## Contributors
 
