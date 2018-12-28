@@ -20,7 +20,7 @@ https://github.com/TheCre8r/WME-PL-Jump-Release/raw/master/WME_PL_Jump.user.js
 
 ## Thanks
 
-* **Joyriding** - *Collaborative Conception
+* **Joyriding** - *Collaborative Conception*
 * **justins83** - *Coding Support and Debugging*
 * **mapomatic** - *Coding Support and Debugging*
 * **jm6087** - *Lead Beta Tester*
