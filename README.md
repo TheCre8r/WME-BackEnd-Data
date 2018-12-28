@@ -8,7 +8,7 @@ Adds the ability to view Hidden External Providers, view gas prices, and adverti
 ## Installation
 
 Install just like any other userscript by just clicking this link:
-https://github.com/TheCre8r/WME-PL-Jump-Release/raw/master/WME_PL_Jump.user.js
+https://github.com/TheCre8r/WME-BackEnd-Data/raw/master/WME-BED.user.js
 
 ## Version History
 
