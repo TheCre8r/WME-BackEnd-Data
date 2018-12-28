@@ -5,7 +5,7 @@
 
 ## Synopsis
 
-Adds the ability to view Hidden External Providers, view gas prices, and advertisement pins (Ad pins).
+Adds the ability to view Hidden External Providers, gas prices, and advertisement pins (Ad pins).
 
 ## Installation
 
