@@ -1,4 +1,4 @@
-# <img src="https://raw.githubusercontent.com/TheCre8r/WME-BackEnd-Data/master/images/fa-bed.svg?sanitize=true" width="22">  WME BackEnd Data
+# <img src="https://raw.githubusercontent.com/TheCre8r/WME-BackEnd-Data/master/images/fa-bed.svg?sanitize=true" width="25">  WME BackEnd Data
 
 ![WME-BED](https://github.com/TheCre8r/WME-BackEnd-Data/blob/master/images/WMEBED.PNG?raw=true)
 
