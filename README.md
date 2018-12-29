@@ -5,7 +5,7 @@
 
 ## Synopsis
 
-Adds the ability to view Hidden External Providers, gas prices, and advertisement pins (Ad pins).
+Adds the ability to view Hidden External Providers, gas prices, and advertisement pins (Ad pins). For complete info, please see the [wiki](https://github.com/TheCre8r/WME-BackEnd-Data/wiki).
 
 ## Installation
 
