@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME BackEnd Data
 // @namespace    https://github.com/thecre8r/
-// @version      2018.12.28.00
+// @version      2018.12.30.00
 // @description  Shows Hidden Attributes, AdPins, and Gas Prices for Applicable Places
 // @include      https://www.waze.com/editor*
 // @include      https://www.waze.com/*/editor*
@@ -32,7 +32,7 @@
     const STORE_NAME = "WMEBED_Settings";
     const SCRIPT_NAME = GM_info.script.name;
     const SCRIPT_VERSION = GM_info.script.version.toString();
-    const UPDATE_ALERT = true;
+    const UPDATE_ALERT = false;
     const USER = {name: null, rank:null};
     let SERVER = W.app.getAppRegionCode();
 
@@ -47,7 +47,7 @@
         log("Update Alert Ran");
         let versionChanges = [
             SCRIPT_NAME + ' v' + SCRIPT_VERSION + ' changes:',
-            '- Initial Release'
+            '- Added a Clear Ad Pins Button '
         ].join('\n');
         if (localStorage === void 0) {
             return;
@@ -212,6 +212,9 @@
         log("CSS Injected");
     }
 
+    function RemoveFeatures() {
+        _adPinsLayer.removeAllFeatures();
+    }
 
     function initTab() {
         let TESTERS = ["The_Cre8r","jm6087","DCLemur"];
@@ -238,6 +241,14 @@
                     '<input type="button" id="WMEBED-Button-Name" value="By Name" class="btn btn-primary WMEBED-Button">',
                     '<input type="button" id="WMEBED-Button-Screen" title="Coming Soon" value="On Screen" class="btn btn-primary WMEBED-Button" disabled>',
                   '</div>',
+                '</div>',
+                '<div class="form-group">',
+                  '<label class="control-label">Clear Ad Pins</label>',
+                  '<div>',
+                    '<input type="button" style="font-family:Font Awesome\\ 5 Free; margin-left:5px;" id="WMEBED-Button-Trash" title="Trash" value="" class="btn btn-danger WMEBED-Button">',
+                  '</div>',
+                '</div>',
+                '<div class="form-group">',
                   '<div style="text-align:center; padding-top:20px">',
                     '<i class="fab fa-github" style="font-size: 13px; padding-right:5px"></i>',
                     '<div style="display: inline-block;">',
@@ -253,6 +264,7 @@
         $('a[href$="#sidepanel-wmebed"]').prop('title', 'WME BED');
         $("#WMEBED-Button-Name").click({source: "popup"},requestAds);
         $("#WMEBED-Button-Screen").click({source: "venues"},requestAds);
+        $("#WMEBED-Button-Trash").click(RemoveFeatures);
         if (USER.name == GM_info.script.author.toString()) {
             $('#WMEBED-Button-Screen').removeAttr("disabled");
         }
