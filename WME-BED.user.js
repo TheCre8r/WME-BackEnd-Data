@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME BackEnd Data
 // @namespace    https://github.com/thecre8r/
-// @version      2018.12.30.00
+// @version      2019.01.01.00
 // @description  Shows Hidden Attributes, AdPins, and Gas Prices for Applicable Places
 // @include      https://www.waze.com/editor*
 // @include      https://www.waze.com/*/editor*
@@ -47,7 +47,8 @@
         log("Update Alert Ran");
         let versionChanges = [
             SCRIPT_NAME + ' v' + SCRIPT_VERSION + ' changes:',
-            '- Added a Clear Ad Pins Button '
+            '- Added RoW and Israel Ad Pin Compatability',
+            '- Multiple Ad Pins show per search or click'
         ].join('\n');
         if (localStorage === void 0) {
             return;
@@ -87,7 +88,15 @@
             return "SearchServer";
         }
     }
-
+    function getAdServer() {
+        if (SERVER == "row") {
+            return "ROW";
+        } else if (SERVER == "il") {
+            return "IL";
+        } else {
+            return "NA";
+        }
+    }
     function requestAds(event) {
         log('Requested Ads '+event.data.source);
         if (event.data.source == 'venues'){
@@ -106,77 +115,91 @@
 
     function processAdsResponse(res) {
         let venue = this.context;
-        log('Venue: '+venue);
+        let ad_data;
+        log('this: '+(Object.getOwnPropertyNames(this)));
+        log('AdPin URL: '+encodeURI(this.finalUrl));
+        //log('Venue: '+(Object.getOwnPropertyNames(venue)));
         let gapidata = $.parseJSON(res.responseText);
-        log(gapidata);
-        if (venue.id) {
-            let ad_data = gapidata[1].find(entry => entry[3].v)[3];
-            if (ad_data.v === "venues."+venue.id) {
-                if (ad_data.j) {
-                    ad_data.j = ad_data.j.substring(3, ad_data.length);
-                    log($.parseJSON(ad_data.j));
-                    log(`https://ads-resources-legacy.waze.com/resources/images/1.0/2x/${ad_data.l}.png`);
-                    makeAdPin(ad_data.x, ad_data.y ,ad_data.l,"white")
-                }
-            }
-			else if (ad_data.v.includes("venues.")) {
-                if (ad_data.j) {
-                    ad_data.j = ad_data.j.substring(3, ad_data.length);
-                    log($.parseJSON(ad_data.j));
-                    log(`https://ads-resources-legacy.waze.com/resources/images/1.0/2x/${ad_data.l}.png`);
-                    makeAdPin(ad_data.x, ad_data.y ,ad_data.l,"grey")
-                }
-            }
-            else if (ad_data.v.includes("googlePlaces.")) {
-                if (ad_data.j) {
-                    ad_data.j = ad_data.j.substring(3, ad_data.length);
-                    log($.parseJSON(ad_data.j));
-                    log(`https://ads-resources-legacy.waze.com/resources/images/1.0/2x/${ad_data.l}.png`);
-                    makeAdPin(ad_data.x, ad_data.y ,ad_data.l,"blue")
-                }
-            }
-            else {
-                if (ad_data.j) {
-                    ad_data.j = ad_data.j.substring(3, ad_data.length);
-                    log($.parseJSON(ad_data.j));
-                    log(`https://ads-resources-legacy.waze.com/resources/images/1.0/2x/${ad_data.l}.png`);
-                    makeAdPin(ad_data.x, ad_data.y ,ad_data.l,"red")
-                }
-            }
-        } else {
-            let ad_data = gapidata[1].find(entry => entry[3].v)[3];
-            if (ad_data.v.includes("venues.")) {
-                if (ad_data.j) {
-                    ad_data.j = ad_data.j.substring(3, ad_data.length);
-                    log($.parseJSON(ad_data.j));
-                    log(`https://ads-resources-legacy.waze.com/resources/images/1.0/2x/${ad_data.l}.png`);
-                    makeAdPin(ad_data.x, ad_data.y ,ad_data.l,"white")
-                }
-            }
-            else if (ad_data.v.includes("googlePlaces.")) {
-                if (ad_data.j) {
-                    ad_data.j = ad_data.j.substring(3, ad_data.length);
-                    log($.parseJSON(ad_data.j));
-                    log(`https://ads-resources-legacy.waze.com/resources/images/1.0/2x/${ad_data.l}.png`);
-                    makeAdPin(ad_data.x, ad_data.y ,ad_data.l,"blue")
-                }
-            }
-            else {
-                if (ad_data.j) {
-                    ad_data.j = ad_data.j.substring(3, ad_data.length);
-                    log($.parseJSON(ad_data.j));
-                    log(`https://ads-resources-legacy.waze.com/resources/images/1.0/2x/${ad_data.l}.png`);
-                    makeAdPin(ad_data.x, ad_data.y ,ad_data.l,"red")
+        log(gapidata[1]);
+        //let ad_data = gapidata[1].has(entry => entry.j)
+
+        for (var i = 0; i <= gapidata.length; i++) {
+
+            if (typeof gapidata[1][i][3] === 'undefined')
+            {log(`Run ${i}: No Ad Created`)}
+            else if (gapidata[1][i][3].j){
+                ad_data = gapidata[1][i][3];
+                log(ad_data);
+                log(`Run ${i}: Ad Created for ${gapidata[1][i][3].a}`)
+                if (venue.id) {
+                    if (ad_data.v === "venues."+venue.id) {
+                        if (ad_data.j) {
+                            ad_data.j = ad_data.j.substring(3, ad_data.length);
+                            log($.parseJSON(ad_data.j));
+                            log(`https://ads-resources-legacy.waze.com/resources/images/1.0/2x/${ad_data.l}.png`);
+                            makeAdPin(ad_data.x, ad_data.y ,ad_data.l,"white")
+                        }
+                    }
+                    else if (ad_data.v.includes("venues.")) {
+                        if (ad_data.j) {
+                            ad_data.j = ad_data.j.substring(3, ad_data.length);
+                            log($.parseJSON(ad_data.j));
+                            log(`https://ads-resources-legacy.waze.com/resources/images/1.0/2x/${ad_data.l}.png`);
+                            makeAdPin(ad_data.x, ad_data.y ,ad_data.l,"grey")
+                        }
+                    }
+                    else if (ad_data.v.includes("googlePlaces.")) {
+                        if (ad_data.j) {
+                            ad_data.j = ad_data.j.substring(3, ad_data.length);
+                            log($.parseJSON(ad_data.j));
+                            log(`https://ads-resources-legacy.waze.com/resources/images/1.0/2x/${ad_data.l}.png`);
+                            makeAdPin(ad_data.x, ad_data.y ,ad_data.l,"blue")
+                        }
+                    }
+                    else {
+                        if (ad_data.j) {
+                            ad_data.j = ad_data.j.substring(3, ad_data.length);
+                            log($.parseJSON(ad_data.j));
+                            log(`https://ads-resources-legacy.waze.com/resources/images/1.0/2x/${ad_data.l}.png`);
+                            makeAdPin(ad_data.x, ad_data.y ,ad_data.l,"red")
+                        }
+                    }
+                } else {
+                    if (ad_data.v.includes("venues.")) {
+                        if (ad_data.j) {
+                            ad_data.j = ad_data.j.substring(3, ad_data.length);
+                            log($.parseJSON(ad_data.j));
+                            log(`https://ads-resources-legacy.waze.com/resources/images/1.0/2x/${ad_data.l}.png`);
+                            makeAdPin(ad_data.x, ad_data.y ,ad_data.l,"white")
+                        }
+                    }
+                    else if (ad_data.v.includes("googlePlaces.")) {
+                        if (ad_data.j) {
+                            ad_data.j = ad_data.j.substring(3, ad_data.length);
+                            log($.parseJSON(ad_data.j));
+                            log(`https://ads-resources-legacy.waze.com/resources/images/1.0/2x/${ad_data.l}.png`);
+                            makeAdPin(ad_data.x, ad_data.y ,ad_data.l,"blue")
+                        }
+                    }
+                    else {
+                        if (ad_data.j) {
+                            ad_data.j = ad_data.j.substring(3, ad_data.length);
+                            log($.parseJSON(ad_data.j));
+                            log(`https://ads-resources-legacy.waze.com/resources/images/1.0/2x/${ad_data.l}.png`);
+                            makeAdPin(ad_data.x, ad_data.y ,ad_data.l,"red")
+                        }
+                    }
                 }
             }
         }
     }
 
     function getAds(latlon,venue) {
-       venue.name = venue.name.replace(/\([\w\W]+\)/,'');
-        log('venue: '+venue.name)
+        let venue_name = venue.name;
+        venue_name.replace(/\([\w\W]+\)/,'');
+        log('Get Ads from '+venue_name)
         GM_xmlhttpRequest({
-            url: `https://gapi.waze.com/autocomplete/q?e=NA&c=wd&sll=${latlon.lat},${latlon.lon}&s&q=${venue.name}&gxy=1`,
+            url: `https://gapi.waze.com/autocomplete/q?e=${getAdServer()}&c=wd&sll=${latlon.lat},${latlon.lon}&s&q=${venue_name}&gxy=1`,
             context: venue,
             method: 'GET',
             onload: processAdsResponse,
@@ -217,7 +240,7 @@
     }
 
     function initTab() {
-        let TESTERS = ["The_Cre8r","jm6087","DCLemur"];
+        let TESTERS = ["The_Cre8r","jm6087","DCLemur","Larryhayes7"];
         let $section = $("<div>");
         USER.name = W.loginManager.user.userName.toString();
         log (USER.name);
@@ -388,26 +411,26 @@
             return `N/A`;
         }
         else {
-        $.getJSON(link,function(data) {
-            if (data.venue.changed_products){
-                log (data.venue.changed_products);
-                let changed_products = data.venue.changed_products.filter(function(i){return i.key == type;})[0];
-                let cost = (changed_products && changed_products.value.price) ? data.venue.currency[0].toString()+String.fromCharCode(160)+changed_products.value.price : "N/A";
-                type = type.replace(/\./,'-').toString();
-                $('#'+type).text(cost);
-                log (cost)
-            } else if (data.venue.product) {
-                log (data.venue.product);
-                let product = data.venue.product.filter(function(i){return i.id == type;})[0];
-                let cost = (product && product.price) ? data.venue.currency[0].toString()+String.fromCharCode(160)+product.price : "N/A";
-                type = type.replace(/\./,'-').toString();
-                $('#'+type).text(cost);
-                log (cost)
-            } else {
-                type = type.replace(/\./,'-').toString();
-                $('#'+type).text("N/A");
-            }
-        });
+            $.getJSON(link,function(data) {
+                if (data.venue.changed_products){
+                    log (data.venue.changed_products);
+                    let changed_products = data.venue.changed_products.filter(function(i){return i.key == type;})[0];
+                    let cost = (changed_products && changed_products.value.price) ? data.venue.currency[0].toString()+String.fromCharCode(160)+changed_products.value.price : "N/A";
+                    type = type.replace(/\./,'-').toString();
+                    $('#'+type).text(cost);
+                    log (cost)
+                } else if (data.venue.product) {
+                    log (data.venue.product);
+                    let product = data.venue.product.filter(function(i){return i.id == type;})[0];
+                    let cost = (product && product.price) ? data.venue.currency[0].toString()+String.fromCharCode(160)+product.price : "N/A";
+                    type = type.replace(/\./,'-').toString();
+                    $('#'+type).text(cost);
+                    log (cost)
+                } else {
+                    type = type.replace(/\./,'-').toString();
+                    $('#'+type).text("N/A");
+                }
+            });
         }
     }
 
@@ -420,46 +443,46 @@
             return `Why would you even think there are gas prices yet? You haven't even saved the place yet. - <a target="_blank" href="https://www.waze.com/user/editor/jm6087">jm6087</a>`;
         }
         else {
-        $.getJSON(link,function(data) {
-            if (data.venue.changed_products) {
-                log("venue.changed_products")
-                log(data.venue.changed_products)
-                if (data.venue.changed_products.filter(function(i){return i.key == "gas.regular";})[0]) {
-                    date = data.venue.changed_products.filter(function(i){return i.key == "gas.regular";})[0].value.updateTime;
-                    user = data.venue.changed_products.filter(function(i){return i.key == "gas.regular";})[0].value.userName;
-                    userid = data.venue.changed_products.filter(function(i){return i.key == "gas.regular";})[0].value.userId;
+            $.getJSON(link,function(data) {
+                if (data.venue.changed_products) {
+                    log("venue.changed_products")
+                    log(data.venue.changed_products)
+                    if (data.venue.changed_products.filter(function(i){return i.key == "gas.regular";})[0]) {
+                        date = data.venue.changed_products.filter(function(i){return i.key == "gas.regular";})[0].value.updateTime;
+                        user = data.venue.changed_products.filter(function(i){return i.key == "gas.regular";})[0].value.userName;
+                        userid = data.venue.changed_products.filter(function(i){return i.key == "gas.regular";})[0].value.userId;
+                    } else {
+                        date = data.venue.changed_products.filter(function(i){return i.key == "gas.95";})[0].value.updateTime;
+                        user = data.venue.changed_products.filter(function(i){return i.key == "gas.95";})[0].value.userName;
+                        userid = data.venue.changed_products.filter(function(i){return i.key == "gas.95";})[0].value.userId;
+                    }
+                    date = timeConverter(date);
+                    log (date)
+                    if (user && date){
+                        $('#gas-update-time').html(`Updated: ${date} by <a target="_blank" href="https://www.waze.com/user/editor/${user}">${user}</a>`);
+                    } else {
+                        $('#gas-update-time').html(`Updated: ${date} by ${userid} </a>`);
+                    }
+                } else if (data.venue.product) {
+                    log (data.venue.product);
+                    if (data.venue.changed_products.filter(function(i){return i.key == "gas.regular";})[0]) {
+                        date = data.venue.product.filter(function(i){return i.id == "gas.regular";})[0].last_updated;
+                        user = data.venue.product.filter(function(i){return i.id == "gas.regular";})[0].updated_by;
+                    } else {
+                        date = data.venue.product.filter(function(i){return i.id == "gas.95";})[0].last_updated;
+                        user = data.venue.product.filter(function(i){return i.id == "gas.95";})[0].updated_by;
+                    }
+                    date = timeConverter(date);
+                    log (date)
+                    if (user && date){
+                        $('#gas-update-time').html(`Updated: ${date} by <a target="_blank" href="https://www.waze.com/user/editor/${user}">${user}</a>`);
+                    } else {
+                        $('#gas-update-time').html(`Updated: ${date} by Unknown User </a>`);
+                    }
                 } else {
-                    date = data.venue.changed_products.filter(function(i){return i.key == "gas.95";})[0].value.updateTime;
-                    user = data.venue.changed_products.filter(function(i){return i.key == "gas.95";})[0].value.userName;
-                    userid = data.venue.changed_products.filter(function(i){return i.key == "gas.95";})[0].value.userId;
+                    $('#gas-update-time').html(`Updated: Never</a>`);
                 }
-                date = timeConverter(date);
-                log (date)
-                if (user && date){
-                    $('#gas-update-time').html(`Updated: ${date} by <a target="_blank" href="https://www.waze.com/user/editor/${user}">${user}</a>`);
-                } else {
-                    $('#gas-update-time').html(`Updated: ${date} by ${userid} </a>`);
-                }
-            } else if (data.venue.product) {
-                log (data.venue.product);
-                if (data.venue.changed_products.filter(function(i){return i.key == "gas.regular";})[0]) {
-                    date = data.venue.product.filter(function(i){return i.id == "gas.regular";})[0].last_updated;
-                    user = data.venue.product.filter(function(i){return i.id == "gas.regular";})[0].updated_by;
-                } else {
-                    date = data.venue.product.filter(function(i){return i.id == "gas.95";})[0].last_updated;
-                    user = data.venue.product.filter(function(i){return i.id == "gas.95";})[0].updated_by;
-                }
-                date = timeConverter(date);
-                log (date)
-                if (user && date){
-                    $('#gas-update-time').html(`Updated: ${date} by <a target="_blank" href="https://www.waze.com/user/editor/${user}">${user}</a>`);
-                } else {
-                    $('#gas-update-time').html(`Updated: ${date} by Unknown User </a>`);
-                }
-            } else {
-                $('#gas-update-time').html(`Updated: Never</a>`);
-            }
-        });
+            });
         }
     }
     function timeConverter(UNIX_timestamp){
@@ -501,92 +524,89 @@
                 if (SERVER == "usa") {
                     $('.landmark').find('.tab-content').append(
                         `<div class="tab-pane" id="landmark-gas">
-                          <div>
                            <form class="attributes-form">
-                           <div class="side-panel-section">
-                             <div class="form-group">
-                               <label class="control-label">Gas Prices</label>
-                               <div style="text-align:center">
-                                 <div style="display: inline-block;">
-                                   <div class="gas-price" id="gas-regular">${getgasprice(link,"gas.regular")}</div>
-                                   <span class="gas-price-text"style="display: block;text-align: center;font-weight: bold;font-size: 10px;">Regular</span>
+                             <div class="side-panel-section">
+                               <div class="form-group">
+                                 <label class="control-label">Gas Prices</label>
+                                 <div style="text-align:center">
+                                   <div style="display: inline-block;">
+                                     <div class="gas-price" id="gas-regular">${getgasprice(link,"gas.regular")}</div>
+                                     <span class="gas-price-text"style="display: block;text-align: center;font-weight: bold;font-size: 10px;">Regular</span>
+                                   </div>
+                                   <div style="display: inline-block;">
+                                     <div class="gas-price" id="gas-midgrade">${getgasprice(link,"gas.midgrade")}</div>
+                                     <span style="display: block;text-align: center;font-weight: bold;font-size: 10px;">Midgrade</span>
+                                   </div>
+                                   <div style="display: inline-block;">
+                                     <div class="gas-price" id="gas-premium">${getgasprice(link,"gas.premium")}</div>
+                                     <span style="display: block;text-align: center;font-weight: bold;font-size: 10px;">Premium</span>
+                                   </div>
+                                   <div style="display: inline-block;">
+                                     <div class="gas-price" id="gas-diesel">${getgasprice(link,"gas.diesel")}</div>
+                                     <span style="display: block;text-align: center;font-weight: bold;font-size: 10px;">Diesel</span>
+                                   </div>
                                  </div>
-                                 <div style="display: inline-block;">
-                                   <div class="gas-price" id="gas-midgrade">${getgasprice(link,"gas.midgrade")}</div>
-                                   <span style="display: block;text-align: center;font-weight: bold;font-size: 10px;">Midgrade</span>
-                                 </div>
-                                 <div style="display: inline-block;">
-                                   <div class="gas-price" id="gas-premium">${getgasprice(link,"gas.premium")}</div>
-                                   <span style="display: block;text-align: center;font-weight: bold;font-size: 10px;">Premium</span>
                                </div>
-                               <div style="display: inline-block;">
-                                 <div class="gas-price" id="gas-diesel">${getgasprice(link,"gas.diesel")}</div>
-                                 <span style="display: block;text-align: center;font-weight: bold;font-size: 10px;">Diesel</span>
-                               </div>
+                               <ul class="additional-attributes list-unstyled side-panel-section">
+                                 <li id="gas-update-time">${getlastupdate(link)}</li>
+                               </ul>
                              </div>
-                           </div>
-                           <ul class="additional-attributes list-unstyled side-panel-section">
-                             <li id="gas-update-time">${getlastupdate(link)}</li>
-                           </ul>
-                         </div>
-                       </div>
-                      </div>`
-                );
+                            </form>
+                         </div>`
+                    );
                 } else if (SERVER == "row") {
                     $('.landmark').find('.tab-content').append(
                         `<div class="tab-pane" id="landmark-gas">
-                          <div>
-                           <form class="attributes-form">
-                           <div class="side-panel-section">
-                             <div class="form-group">
-                               <label class="control-label">Gas Prices</label>
-                               <div style="text-align:center">
-                                 <div style="display: inline-block;">
-                                   <div class="gas-price" id="gas-95">${getgasprice(link,"gas.95")}</div>
-                                   <span class="gas-price-text"style="display: block;text-align: center;font-weight: bold;font-size: 10px;">Super 95</span>
-                                 </div>
-                                 <div style="display: inline-block;">
-                                   <div class="gas-price" id="gas-98">${getgasprice(link,"gas.98")}</div>
-                                   <span style="display: block;text-align: center;font-weight: bold;font-size: 10px;">Super 98</span>
-                                 </div>
-                                 <div style="display: inline-block;">
-                                   <div class="gas-price" id="gas-lpg">${getgasprice(link,"gas.lpg")}</div>
-                                   <span style="display: block;text-align: center;font-weight: bold;font-size: 10px;">LPG</span>
-                               </div>
-                               <div style="display: inline-block;">
-                                 <div class="gas-price" id="gas-diesel">${getgasprice(link,"gas.diesel")}</div>
-                                   <span style="display: block;text-align: center;font-weight: bold;font-size: 10px;">Diesel</span>
-                                 </div>
-                               </div>
-                             </div>
-                             <ul class="additional-attributes list-unstyled side-panel-section">
-                             <li id="gas-update-time">${getlastupdate(link)}</li>
-                           </ul>
-                         </div>
-                       </div>
-                      </div>`
+                          <form class="attributes-form">
+                            <div class="side-panel-section">
+                              <div class="form-group">
+                                <label class="control-label">Gas Prices</label>
+                                  <div style="text-align:center">
+                                    <div style="display: inline-block;">
+                                      <div class="gas-price" id="gas-95">${getgasprice(link,"gas.95")}</div>
+                                      <span class="gas-price-text"style="display: block;text-align: center;font-weight: bold;font-size: 10px;">Super 95</span>
+                                    </div>
+                                    <div style="display: inline-block;">
+                                      <div class="gas-price" id="gas-98">${getgasprice(link,"gas.98")}</div>
+                                      <span style="display: block;text-align: center;font-weight: bold;font-size: 10px;">Super 98</span>
+                                    </div>
+                                    <div style="display: inline-block;">
+                                      <div class="gas-price" id="gas-lpg">${getgasprice(link,"gas.lpg")}</div>
+                                      <span style="display: block;text-align: center;font-weight: bold;font-size: 10px;">LPG</span>
+                                    </div>
+                                    <div style="display: inline-block;">
+                                      <div class="gas-price" id="gas-diesel">${getgasprice(link,"gas.diesel")}</div>
+                                      <span style="display: block;text-align: center;font-weight: bold;font-size: 10px;">Diesel</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              <ul class="additional-attributes list-unstyled side-panel-section">
+                                <li id="gas-update-time">${getlastupdate(link)}</li>
+                              </ul>
+                            </div>
+                          </form>
+                        </div>`
                     );
                 } else {
                     $('.landmark').find('.tab-content').append(
                         `<div class="tab-pane" id="landmark-gas">
-                          <div>
-                           <form class="attributes-form">
-                           <div class="side-panel-section">
-                             <div class="form-group">
-                               <label class="control-label">Gas Prices</label>
-                               <div style="text-align:center;padding-top:20px">
-                               Gas Prices are not available in your area.<br />Press button below to help out!
-                               <div style="text-align:center;padding-top:20px">
-                                 <i class="fab fa-github" style="font-size: 13px; padding-right:5px"></i>
-                                 <div style="display: inline-block">
-                                   <a target="_blank" href="https://github.com/TheCre8r/WME-BackEnd-Data/issues/new?title=Missing%20Gas%20Prices&body=${encodeURIComponent("Permalink: "+$(".WMEFP-GLOBAL-PL").context.URL.toString())}" id="WMEBED-report-an-issue">Report an Issue</a>
-                                 </div>
-                               </div>
-                             </div>
-                           </ul>
-                         </div>
-                       </div>
-                      </div>`
+                            <form class="attributes-form">
+                              <div class="side-panel-section">
+                                <div class="form-group">
+                                  <label class="control-label">Gas Prices</label>
+                                  <div style="text-align:center;padding-top:20px">
+                                    Gas Prices are not available in your area.<br />Press button below to help out!
+                                    <div style="text-align:center;padding-top:20px">
+                                      <i class="fab fa-github" style="font-size: 13px; padding-right:5px"></i>
+                                      <div style="display: inline-block">
+                                        <a target="_blank" href="https://github.com/TheCre8r/WME-BackEnd-Data/issues/new?title=Missing%20Gas%20Prices&body=${encodeURIComponent("Permalink: "+$(".WMEFP-GLOBAL-PL").context.URL.toString())}" id="WMEBED-report-an-issue">Report an Issue</a>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </form>
+                          </div>`
                     );
                 }
             }
@@ -651,7 +671,7 @@
                     let addedNode = mutation.addedNodes[i];
                     // Only fire up if it's a node
                     //log("Observer Running "+ $(addedNode).attr('class'));
-					//if (addedNode.nodeType === Node.ELEMENT_NODE && !$('#ExternalProviders2').length && addedNode.querySelector('div.external-providers-view') && WazeWrap.hasPlaceSelected()) {
+                    //if (addedNode.nodeType === Node.ELEMENT_NODE && !$('#ExternalProviders2').length && addedNode.querySelector('div.external-providers-view') && WazeWrap.hasPlaceSelected()) {
                     if (addedNode.nodeType === Node.ELEMENT_NODE && !$('#ExternalProviders2').length && WazeWrap.hasPlaceSelected()) {
                         insertExternalProviders2();
                         log("Loaded insertExternalProviders2 "+ $(addedNode).attr('class'));
