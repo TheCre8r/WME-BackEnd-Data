@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME BackEnd Data
 // @namespace    https://github.com/thecre8r/
-// @version      2019.01.01.00
+// @version      2019.01.04.00
 // @description  Shows Hidden Attributes, AdPins, and Gas Prices for Applicable Places
 // @include      https://www.waze.com/editor*
 // @include      https://www.waze.com/*/editor*
@@ -32,7 +32,7 @@
     const STORE_NAME = "WMEBED_Settings";
     const SCRIPT_NAME = GM_info.script.name;
     const SCRIPT_VERSION = GM_info.script.version.toString();
-    const UPDATE_ALERT = false;
+    const UPDATE_ALERT = true;
     const USER = {name: null, rank:null};
     let SERVER = W.app.getAppRegionCode();
 
@@ -47,7 +47,7 @@
         log("Update Alert Ran");
         let versionChanges = [
             SCRIPT_NAME + ' v' + SCRIPT_VERSION + ' changes:',
-            ''
+            '- Fixed FontAwesome compatibility issues'
         ].join('\n');
         if (localStorage === void 0) {
             return;
@@ -227,10 +227,15 @@
             '#WMEBED-title {font-size:15px;font-weight:600;}',
             '#WMEBED-version {font-size:11px;margin-left:10px;color:#aaa;}',
             '.WMEBED-Button {font-family:"Open Sans",FontAwesome;padding-left:10px;padding-right:10px;margin-top:0px;z-index: 3;}',
-            '.gas-price {text-align:center;cursor:default;background-attachment:scroll;background-clip:border-box;background-color:rgb(255, 255, 255);background-image:none;background-origin:padding-box;background-position-x:0%;background-position-y:0%;background-repeat-x:;background-repeat-y:;background-size:auto;border-bottom-color:rgb(61, 61, 61);border-bottom-left-radius:8px;border-bottom-right-radius:8px;border-bottom-style:none;border-bottom-width:0px;border-image-outset:0px;border-image-repeat:stretch;border-image-slice:100%;border-image-source:none;border-image-width:1;border-left-color:rgb(61, 61, 61);border-left-style:none;border-left-width:0px;border-right-color:rgb(61, 61, 61);border-right-style:none;border-right-width:0px;border-top-color:rgb(61, 61, 61);border-top-left-radius:8px;border-top-right-radius:8px;border-top-style:none;border-top-width:0px;box-shadow:rgba(0, 0, 0, 0.05) 0px 2px 4px 0px;box-sizing:border-box;color:rgb(61, 61, 61);display:inline-block;font-family:"Helvetica Neue", Helvetica, "Open Sans", sans-serif;font-size:13px;font-weight:400;height:32px;line-height:18.5714px;padding-bottom:7px;padding-left:10px;padding-right:10px;padding-top:7px;text-size-adjust:100%;width:60px;-webkit-tap-highlight-color:rgba(0, 0, 0, 0);'
+            '.gas-price {text-align:center;cursor:default;background-attachment:scroll;background-clip:border-box;background-color:rgb(255, 255, 255);background-image:none;background-origin:padding-box;background-position-x:0%;background-position-y:0%;background-repeat-x:;background-repeat-y:;background-size:auto;border-bottom-color:rgb(61, 61, 61);border-bottom-left-radius:8px;border-bottom-right-radius:8px;border-bottom-style:none;border-bottom-width:0px;border-image-outset:0px;border-image-repeat:stretch;border-image-slice:100%;border-image-source:none;border-image-width:1;border-left-color:rgb(61, 61, 61);border-left-style:none;border-left-width:0px;border-right-color:rgb(61, 61, 61);border-right-style:none;border-right-width:0px;border-top-color:rgb(61, 61, 61);border-top-left-radius:8px;border-top-right-radius:8px;border-top-style:none;border-top-width:0px;box-shadow:rgba(0, 0, 0, 0.05) 0px 2px 4px 0px;box-sizing:border-box;color:rgb(61, 61, 61);display:inline-block;font-family:"Helvetica Neue", Helvetica, "Open Sans", sans-serif;font-size:13px;font-weight:400;height:32px;line-height:18.5714px;padding-bottom:7px;padding-left:10px;padding-right:10px;padding-top:7px;text-size-adjust:100%;width:60px;-webkit-tap-highlight-color:rgba(0, 0, 0, 0)}',
+            '.fab{font-family:"Font Awesome 5 Brands"}',
+            '@font-face{font-family:"Font Awesome 5 Free";font-style:normal;font-weight:400;src:url(https://use.fontawesome.com/releases/v5.6.1/webfonts/fa-regular-400.eot);src:url(https://use.fontawesome.com/releases/v5.6.1/webfonts/fa-regular-400.eot?#iefix) format("embedded-opentype"),url(https://use.fontawesome.com/releases/v5.6.1/webfonts/fa-regular-400.woff2) format("woff2"),url(https://use.fontawesome.com/releases/v5.6.1/webfonts/fa-regular-400.woff) format("woff"),url(https://use.fontawesome.com/releases/v5.6.1/webfonts/fa-regular-400.ttf) format("truetype"),url(https://use.fontawesome.com/releases/v5.6.1/webfonts/fa-regular-400.svg#fontawesome) format("svg")}',
+            '.far{font-weight:400}',
+            '@font-face{font-family:"Font Awesome 5 Free";font-style:normal;font-weight:900;src:url(https://use.fontawesome.com/releases/v5.6.1/webfonts/fa-solid-900.eot);src:url(https://use.fontawesome.com/releases/v5.6.1/webfonts/fa-solid-900.eot?#iefix) format("embedded-opentype"),url(https://use.fontawesome.com/releases/v5.6.1/webfonts/fa-solid-900.woff2) format("woff2"),url(https://use.fontawesome.com/releases/v5.6.1/webfonts/fa-solid-900.woff) format("woff"),url(https://use.fontawesome.com/releases/v5.6.1/webfonts/fa-solid-900.ttf) format("truetype"),url(https://use.fontawesome.com/releases/v5.6.1/webfonts/fa-solid-900.svg#fontawesome) format("svg")}',
+            '.far,.fas{font-family:"Font Awesome 5 Free"}',
+            '.fas{font-weight:900}'
         ].join(' ');
         $('<style type="text/css">' + css + '</style>').appendTo('head');
-        $('<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.1/css/all.css" integrity="sha384-gfdkjb5BdAXd+lj+gudLWI+BXq4IuLW5IT+brZEZsLFm++aCMlF1V92rMkPaX4PP" crossorigin="anonymous">').appendTo('head');
         log("CSS Injected");
     }
 
@@ -282,7 +287,7 @@
             '</div>'
         ].join(' '));
         new WazeWrap.Interface.Tab('WMEBED', $section.html(), init);
-        $('a[href$="#sidepanel-wmebed"]').html(`<i class="fas fa-bed"></i>`)
+        $('a[href$="#sidepanel-wmebed"]').html(`<span class="fas fa-bed"></span>`)
         $('a[href$="#sidepanel-wmebed"]').prop('title', 'WME BED');
         $("#WMEBED-Button-Name").click({source: "popup"},requestAds);
         $("#WMEBED-Button-Screen").click({source: "venues"},requestAds);
@@ -519,7 +524,7 @@
         if(W.selectionManager.getSelectedFeatures()[0].model.type === "venue") {
             if (W.selectionManager.getSelectedFeatures()[0].model.attributes.categories.indexOf("GAS_STATION") >= 0){
                 getlastupdate(link)
-                $('.tabs-container ul').append('<li><a data-toggle="tab" href="#landmark-gas"><i class="fas fa-gas-pump"></i></a></li>');
+                $('.tabs-container ul').append('<li><a data-toggle="tab" id="gas-tab" href="#landmark-gas"><span class="fas fa-gas-pump"></span></a></li>');
                 if (SERVER == "usa") {
                     $('.landmark').find('.tab-content').append(
                         `<div class="tab-pane" id="landmark-gas">
