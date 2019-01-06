@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME BackEnd Data
 // @namespace    https://github.com/thecre8r/
-// @version      2019.01.04.00
+// @version      2019.01.05.00
 // @description  Shows Hidden Attributes, AdPins, and Gas Prices for Applicable Places
 // @include      https://www.waze.com/editor*
 // @include      https://www.waze.com/*/editor*
@@ -32,7 +32,7 @@
     const STORE_NAME = "WMEBED_Settings";
     const SCRIPT_NAME = GM_info.script.name;
     const SCRIPT_VERSION = GM_info.script.version.toString();
-    const UPDATE_ALERT = true;
+    const UPDATE_ALERT = false;
     const USER = {name: null, rank:null};
     let SERVER = W.app.getAppRegionCode();
 
@@ -47,7 +47,7 @@
         log("Update Alert Ran");
         let versionChanges = [
             SCRIPT_NAME + ' v' + SCRIPT_VERSION + ' changes:',
-            '- Fixed FontAwesome compatibility issues'
+            ''
         ].join('\n');
         if (localStorage === void 0) {
             return;
@@ -122,8 +122,7 @@
         log(gapidata[1]);
         //let ad_data = gapidata[1].has(entry => entry.j)
 
-        for (var i = 0; i <= gapidata.length; i++) {
-
+        for (var i = 0; i < gapidata[1].length; i++) {
             if (typeof gapidata[1][i][3] === 'undefined')
             {log(`Run ${i}: No Ad Created`)}
             else if (gapidata[1][i][3].j){
