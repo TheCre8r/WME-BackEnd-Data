@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME BackEnd Data
 // @namespace    https://github.com/thecre8r/
-// @version      2019.01.05.00
+// @version      2019.01.24.00
 // @description  Shows Hidden Attributes, AdPins, and Gas Prices for Applicable Places
 // @include      https://www.waze.com/editor*
 // @include      https://www.waze.com/*/editor*
@@ -34,7 +34,7 @@
     const SCRIPT_VERSION = GM_info.script.version.toString();
     const UPDATE_ALERT = false;
     const USER = {name: null, rank:null};
-    let SERVER = W.app.getAppRegionCode();
+    const SERVER = {name: null};
 
     let _settings = {};
     let _adPinsLayer;
@@ -79,18 +79,18 @@
         }
     }
     function getSearchServer() {
-        if (SERVER == "row") {
+        if (SERVER.name == "row") {
             return "row-SearchServer";
-        } else if (SERVER == "il") {
+        } else if (SERVER.name == "il") {
             return "il-SearchServer";
         } else {
             return "SearchServer";
         }
     }
     function getAdServer() {
-        if (SERVER == "row") {
+        if (SERVER.name == "row") {
             return "ROW";
-        } else if (SERVER == "il") {
+        } else if (SERVER.name == "il") {
             return "IL";
         } else {
             return "NA";
@@ -235,6 +235,8 @@
             '.fas{font-weight:900}'
         ].join(' ');
         $('<style type="text/css">' + css + '</style>').appendTo('head');
+        $('<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.3/css/brands.css" integrity="sha384-1KLgFVb/gHrlDGLFPgMbeedi6tQBLcWvyNUN+YKXbD7ZFbjX6BLpMDf0PJ32XJfX" crossorigin="anonymous">').appendTo('head');
+        $('<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.3/css/fontawesome.css" integrity="sha384-jLuaxTTBR42U2qJ/pm4JRouHkEDHkVqH0T1nyQXn1mZ7Snycpf6Rl25VBNthU4z0" crossorigin="anonymous">').appendTo('head');
         log("CSS Injected");
     }
 
@@ -246,7 +248,7 @@
         let TESTERS = ["The_Cre8r","jm6087","DCLemur","Larryhayes7"];
         let $section = $("<div>");
         USER.name = W.loginManager.user.userName.toString();
-        log (USER.name);
+        SERVER.name = W.app.getAppRegionCode();
         function UserTest() {
             return (TESTERS.indexOf(USER.name) > -1 ? `<div class="controls-container"><input type="checkbox" id="WMEBED-Debug" value="on"><label for="WMEBED-Debug">Enable Debug Link</label></div>` : '');
         }
@@ -524,7 +526,7 @@
             if (W.selectionManager.getSelectedFeatures()[0].model.attributes.categories.indexOf("GAS_STATION") >= 0){
                 getlastupdate(link)
                 $('.tabs-container ul').append('<li><a data-toggle="tab" id="gas-tab" href="#landmark-gas"><span class="fas fa-gas-pump"></span></a></li>');
-                if (SERVER == "usa") {
+                if (SERVER.name == "usa") {
                     $('.landmark').find('.tab-content').append(
                         `<div class="tab-pane" id="landmark-gas">
                            <form class="attributes-form">
@@ -557,7 +559,7 @@
                             </form>
                          </div>`
                     );
-                } else if (SERVER == "row") {
+                } else if (SERVER.name == "row") {
                     $('.landmark').find('.tab-content').append(
                         `<div class="tab-pane" id="landmark-gas">
                           <form class="attributes-form">
