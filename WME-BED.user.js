@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME BackEnd Data
 // @namespace    https://github.com/thecre8r/
-// @version      2019.01.24.00
+// @version      2019.01.25.00
 // @description  Shows Hidden Attributes, AdPins, and Gas Prices for Applicable Places
 // @include      https://www.waze.com/editor*
 // @include      https://www.waze.com/*/editor*
@@ -65,19 +65,17 @@
         }
     }
 
-    function GetURLParameter(sParam)
-    {
+    function GetURLParameter(sParam) {
         var sPageURL = window.location.search.substring(1);
         var sURLVariables = sPageURL.split('&');
-        for (var i = 0; i < sURLVariables.length; i++)
-        {
+        for (var i = 0; i < sURLVariables.length; i++) {
             var sParameterName = sURLVariables[i].split('=');
-            if (sParameterName[0] == sParam)
-            {
+            if (sParameterName[0] == sParam) {
                 return sParameterName[1];
             }
         }
     }
+
     function getSearchServer() {
         if (SERVER.name == "row") {
             return "row-SearchServer";
@@ -87,6 +85,7 @@
             return "SearchServer";
         }
     }
+
     function getAdServer() {
         if (SERVER.name == "row") {
             return "ROW";
@@ -96,6 +95,7 @@
             return "NA";
         }
     }
+
     function requestAds(event) {
         log('Requested Ads '+event.data.source);
         if (event.data.source == 'venues'){
@@ -121,7 +121,6 @@
         let gapidata = $.parseJSON(res.responseText);
         log(gapidata[1]);
         //let ad_data = gapidata[1].has(entry => entry.j)
-
         for (var i = 0; i < gapidata[1].length; i++) {
             if (typeof gapidata[1][i][3] === 'undefined')
             {log(`Run ${i}: No Ad Created`)}
@@ -388,10 +387,7 @@
             graphicHeight: 28,
             fillOpacity: 1
         });
-
-
         let lsLine1 = new OL.Geometry.LineString([adpinPt, adpinPtOffset1]);
-
         let lineFeature1 = new OL.Feature.Vector(lsLine1, {}, {
             strokeWidth: 3,
             strokeDashstyle: 'solid',
@@ -405,7 +401,6 @@
             labelOutlineWidth: 4,
             fontSize: '18'
         });
-
         _adPinsLayer.addFeatures([lineFeature1, feature, marker1, marker2]);
     }
     function getgasprice(link,type){
@@ -490,6 +485,7 @@
             });
         }
     }
+    
     function timeConverter(UNIX_timestamp){
         var a = new Date(UNIX_timestamp);
         var months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
@@ -509,6 +505,7 @@
         var time = month + ' ' + date + ', ' + year + ' ' + hour + ':' + min;
         return time;
     }
+    
     function insertExternalProviders2(){
         let latlon = get4326CenterPoint();
         let venue = W.selectionManager.getSelectedFeatures()[0].model.attributes;
