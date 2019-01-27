@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME BackEnd Data
 // @namespace    https://github.com/thecre8r/
-// @version      2019.01.25.00
+// @version      2019.01.27.00
 // @description  Shows Hidden Attributes, AdPins, and Gas Prices for Applicable Places
 // @include      https://www.waze.com/editor*
 // @include      https://www.waze.com/*/editor*
@@ -522,7 +522,7 @@
         if(W.selectionManager.getSelectedFeatures()[0].model.type === "venue") {
             if (W.selectionManager.getSelectedFeatures()[0].model.attributes.categories.indexOf("GAS_STATION") >= 0){
                 getlastupdate(link)
-                $('.tabs-container ul').append('<li><a data-toggle="tab" id="gas-tab" href="#landmark-gas"><span class="fas fa-gas-pump"></span></a></li>');
+                $('.tabs-container ul').append('<li><a data-toggle="tab" id="gas-tab" href="#landmark-gas"><span class="fas fa-gas-pump"></span></a></li>');
                 if (SERVER.name == "usa") {
                     $('.landmark').find('.tab-content').append(
                         `<div class="tab-pane" id="landmark-gas">
