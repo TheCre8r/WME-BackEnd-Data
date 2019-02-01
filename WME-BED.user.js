@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME BackEnd Data
 // @namespace    https://github.com/thecre8r/
-// @version      2019.01.27.00
+// @version      2019.01.30.03
 // @description  Shows Hidden Attributes, AdPins, and Gas Prices for Applicable Places
 // @include      https://www.waze.com/editor*
 // @include      https://www.waze.com/*/editor*
@@ -115,49 +115,49 @@
     function processAdsResponse(res) {
         let venue = this.context;
         let ad_data;
-        log('this: '+(Object.getOwnPropertyNames(this)));
-        log('AdPin URL: '+encodeURI(this.finalUrl));
+        //log('this: '+(Object.getOwnPropertyNames(this)));
+        //log('AdPin URL: '+encodeURI(this.finalUrl));
         //log('Venue: '+(Object.getOwnPropertyNames(venue)));
         let gapidata = $.parseJSON(res.responseText);
-        log(gapidata[1]);
+        //log(gapidata[1]);
         //let ad_data = gapidata[1].has(entry => entry.j)
         for (var i = 0; i < gapidata[1].length; i++) {
             if (typeof gapidata[1][i][3] === 'undefined')
             {log(`Run ${i}: No Ad Created`)}
             else if (gapidata[1][i][3].j){
                 ad_data = gapidata[1][i][3];
-                log(ad_data);
-                log(`Run ${i}: Ad Created for ${gapidata[1][i][3].a}`)
+                //log(ad_data);
+                log(`Run ${i}: Ad Created for ${gapidata[1][i][0]} at ${gapidata[1][i][3].a}`)
                 if (venue.id) {
                     if (ad_data.v === "venues."+venue.id) {
                         if (ad_data.j) {
                             ad_data.j = ad_data.j.substring(3, ad_data.length);
-                            log($.parseJSON(ad_data.j));
-                            log(`https://ads-resources-legacy.waze.com/resources/images/1.0/2x/${ad_data.l}.png`);
+                            //log($.parseJSON(ad_data.j));
+                            //log(`https://ads-resources-legacy.waze.com/resources/images/1.0/2x/${ad_data.l}.png`);
                             makeAdPin(ad_data.x, ad_data.y ,ad_data.l,"white")
                         }
                     }
                     else if (ad_data.v.includes("venues.")) {
                         if (ad_data.j) {
                             ad_data.j = ad_data.j.substring(3, ad_data.length);
-                            log($.parseJSON(ad_data.j));
-                            log(`https://ads-resources-legacy.waze.com/resources/images/1.0/2x/${ad_data.l}.png`);
+                            //log($.parseJSON(ad_data.j));
+                            //log(`https://ads-resources-legacy.waze.com/resources/images/1.0/2x/${ad_data.l}.png`);
                             makeAdPin(ad_data.x, ad_data.y ,ad_data.l,"grey")
                         }
                     }
                     else if (ad_data.v.includes("googlePlaces.")) {
                         if (ad_data.j) {
                             ad_data.j = ad_data.j.substring(3, ad_data.length);
-                            log($.parseJSON(ad_data.j));
-                            log(`https://ads-resources-legacy.waze.com/resources/images/1.0/2x/${ad_data.l}.png`);
+                            //log($.parseJSON(ad_data.j));
+                            //log(`https://ads-resources-legacy.waze.com/resources/images/1.0/2x/${ad_data.l}.png`);
                             makeAdPin(ad_data.x, ad_data.y ,ad_data.l,"blue")
                         }
                     }
                     else {
                         if (ad_data.j) {
                             ad_data.j = ad_data.j.substring(3, ad_data.length);
-                            log($.parseJSON(ad_data.j));
-                            log(`https://ads-resources-legacy.waze.com/resources/images/1.0/2x/${ad_data.l}.png`);
+                            //log($.parseJSON(ad_data.j));
+                            //log(`https://ads-resources-legacy.waze.com/resources/images/1.0/2x/${ad_data.l}.png`);
                             makeAdPin(ad_data.x, ad_data.y ,ad_data.l,"red")
                         }
                     }
@@ -165,24 +165,24 @@
                     if (ad_data.v.includes("venues.")) {
                         if (ad_data.j) {
                             ad_data.j = ad_data.j.substring(3, ad_data.length);
-                            log($.parseJSON(ad_data.j));
-                            log(`https://ads-resources-legacy.waze.com/resources/images/1.0/2x/${ad_data.l}.png`);
+                            //log($.parseJSON(ad_data.j));
+                            //log(`https://ads-resources-legacy.waze.com/resources/images/1.0/2x/${ad_data.l}.png`);
                             makeAdPin(ad_data.x, ad_data.y ,ad_data.l,"white")
                         }
                     }
                     else if (ad_data.v.includes("googlePlaces.")) {
                         if (ad_data.j) {
                             ad_data.j = ad_data.j.substring(3, ad_data.length);
-                            log($.parseJSON(ad_data.j));
-                            log(`https://ads-resources-legacy.waze.com/resources/images/1.0/2x/${ad_data.l}.png`);
+                            //log($.parseJSON(ad_data.j));
+                            //log(`https://ads-resources-legacy.waze.com/resources/images/1.0/2x/${ad_data.l}.png`);
                             makeAdPin(ad_data.x, ad_data.y ,ad_data.l,"blue")
                         }
                     }
                     else {
                         if (ad_data.j) {
                             ad_data.j = ad_data.j.substring(3, ad_data.length);
-                            log($.parseJSON(ad_data.j));
-                            log(`https://ads-resources-legacy.waze.com/resources/images/1.0/2x/${ad_data.l}.png`);
+                            //log($.parseJSON(ad_data.j));
+                            //log(`https://ads-resources-legacy.waze.com/resources/images/1.0/2x/${ad_data.l}.png`);
                             makeAdPin(ad_data.x, ad_data.y ,ad_data.l,"red")
                         }
                     }
@@ -194,7 +194,7 @@
     function getAds(latlon,venue) {
         let venue_name = venue.name;
         venue_name.replace(/\([\w\W]+\)/,'');
-        log('Get Ads from '+venue_name)
+        log('Get Ads for '+venue_name)
         GM_xmlhttpRequest({
             url: `https://gapi.waze.com/autocomplete/q?e=${getAdServer()}&c=wd&sll=${latlon.lat},${latlon.lon}&s&q=${venue_name}&gxy=1`,
             context: venue,
@@ -224,6 +224,8 @@
             '#WMEBED-header {margin-bottom:10px;}',
             '#WMEBED-title {font-size:15px;font-weight:600;}',
             '#WMEBED-version {font-size:11px;margin-left:10px;color:#aaa;}',
+            '.WMEBED-report {text-align:center;padding-top:20px;}',
+            '#WMEBED-report-an-issue-gas {cursor:pointer;}',
             '.WMEBED-Button {font-family:"Open Sans",FontAwesome;padding-left:10px;padding-right:10px;margin-top:0px;z-index: 3;}',
             '.gas-price {text-align:center;cursor:default;background-attachment:scroll;background-clip:border-box;background-color:rgb(255, 255, 255);background-image:none;background-origin:padding-box;background-position-x:0%;background-position-y:0%;background-repeat-x:;background-repeat-y:;background-size:auto;border-bottom-color:rgb(61, 61, 61);border-bottom-left-radius:8px;border-bottom-right-radius:8px;border-bottom-style:none;border-bottom-width:0px;border-image-outset:0px;border-image-repeat:stretch;border-image-slice:100%;border-image-source:none;border-image-width:1;border-left-color:rgb(61, 61, 61);border-left-style:none;border-left-width:0px;border-right-color:rgb(61, 61, 61);border-right-style:none;border-right-width:0px;border-top-color:rgb(61, 61, 61);border-top-left-radius:8px;border-top-right-radius:8px;border-top-style:none;border-top-width:0px;box-shadow:rgba(0, 0, 0, 0.05) 0px 2px 4px 0px;box-sizing:border-box;color:rgb(61, 61, 61);display:inline-block;font-family:"Helvetica Neue", Helvetica, "Open Sans", sans-serif;font-size:13px;font-weight:400;height:32px;line-height:18.5714px;padding-bottom:7px;padding-left:10px;padding-right:10px;padding-top:7px;text-size-adjust:100%;width:60px;-webkit-tap-highlight-color:rgba(0, 0, 0, 0)}',
             '.fab{font-family:"Font Awesome 5 Brands"}',
@@ -276,7 +278,7 @@
                   '</div>',
                 '</div>',
                 '<div class="form-group">',
-                  '<div style="text-align:center; padding-top:20px">',
+                  '<div class="WMEBED-report">',
                     '<i class="fab fa-github" style="font-size: 13px; padding-right:5px"></i>',
                     '<div style="display: inline-block;">',
                       '<a target="_blank" href="https://github.com/TheCre8r/WME-BackEnd-Data/issues/new" id="WMEBED-report-an-issue">Report an Issue</a>',
@@ -346,12 +348,16 @@
         let lon = Math.round(center4326.lon * 1000000) / 1000000;
         return new OL.LonLat(lon, lat);
     }
+    String.prototype.titleCase = function(n) {
+        return this.toLowerCase().split(' ').map(function(word) {
+            return word.replace(word[0], word[0].toUpperCase());
+        }).join(' ');
+    }
 
     function makeAdPin(x,y,logo,color) {
-        log(`Make Ad Pin at https://www.waze.com/en-US/editor/?lon=${x}&lat=${y}&zoom=${W.map.zoom}`)
-
+        log(`Make a ${color.titleCase()} Ad Pin at https://www.waze.com/en-US/editor/?lon=${x}&lat=${y}&zoom=${W.map.zoom}`)
         let graphicUrl = `https://ads-resources-legacy.waze.com/resources/images/1.0/2x/${logo}.png`;
-        log(graphicUrl);
+        //log(graphicUrl);
         let adpinPt=new OL.Geometry.Point(x,y);
         adpinPt.transform(W.map.displayProjection, W.map.projection);
         //adpinPt.transform(W.map.projection, W.map.displayProjection);
@@ -413,19 +419,19 @@
         else {
             $.getJSON(link,function(data) {
                 if (data.venue.changed_products){
-                    log (data.venue.changed_products);
+                    //log (data.venue.changed_products);
                     let changed_products = data.venue.changed_products.filter(function(i){return i.key == type;})[0];
                     let cost = (changed_products && changed_products.value.price) ? data.venue.currency[0].toString()+String.fromCharCode(160)+changed_products.value.price : "N/A";
                     type = type.replace(/\./,'-').toString();
                     $('#'+type).text(cost);
-                    log (cost)
+                    //log (cost)
                 } else if (data.venue.product) {
-                    log (data.venue.product);
+                    //log (data.venue.product);
                     let product = data.venue.product.filter(function(i){return i.id == type;})[0];
                     let cost = (product && product.price) ? data.venue.currency[0].toString()+String.fromCharCode(160)+product.price : "N/A";
                     type = type.replace(/\./,'-').toString();
                     $('#'+type).text(cost);
-                    log (cost)
+                    //log (cost)
                 } else {
                     type = type.replace(/\./,'-').toString();
                     $('#'+type).text("N/A");
@@ -445,8 +451,8 @@
         else {
             $.getJSON(link,function(data) {
                 if (data.venue.changed_products) {
-                    log("venue.changed_products")
-                    log(data.venue.changed_products)
+                    //log("venue.changed_products")
+                    //log(data.venue.changed_products)
                     if (data.venue.changed_products.filter(function(i){return i.key == "gas.regular";})[0]) {
                         date = data.venue.changed_products.filter(function(i){return i.key == "gas.regular";})[0].value.updateTime;
                         user = data.venue.changed_products.filter(function(i){return i.key == "gas.regular";})[0].value.userName;
@@ -457,14 +463,14 @@
                         userid = data.venue.changed_products.filter(function(i){return i.key == "gas.95";})[0].value.userId;
                     }
                     date = timeConverter(date);
-                    log (date)
+                    //log (date)
                     if (user && date){
                         $('#gas-update-time').html(`Updated: ${date} by <a target="_blank" href="https://www.waze.com/user/editor/${user}">${user}</a>`);
                     } else {
                         $('#gas-update-time').html(`Updated: ${date} by ${userid} </a>`);
                     }
                 } else if (data.venue.product) {
-                    log (data.venue.product);
+                    //log (data.venue.product);
                     if (data.venue.changed_products.filter(function(i){return i.key == "gas.regular";})[0]) {
                         date = data.venue.product.filter(function(i){return i.id == "gas.regular";})[0].last_updated;
                         user = data.venue.product.filter(function(i){return i.id == "gas.regular";})[0].updated_by;
@@ -473,7 +479,7 @@
                         user = data.venue.product.filter(function(i){return i.id == "gas.95";})[0].updated_by;
                     }
                     date = timeConverter(date);
-                    log (date)
+                    //log (date)
                     if (user && date){
                         $('#gas-update-time').html(`Updated: ${date} by <a target="_blank" href="https://www.waze.com/user/editor/${user}">${user}</a>`);
                     } else {
@@ -485,7 +491,7 @@
             });
         }
     }
-    
+
     function timeConverter(UNIX_timestamp){
         var a = new Date(UNIX_timestamp);
         var months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
@@ -505,7 +511,7 @@
         var time = month + ' ' + date + ', ' + year + ' ' + hour + ':' + min;
         return time;
     }
-    
+
     function insertExternalProviders2(){
         let latlon = get4326CenterPoint();
         let venue = W.selectionManager.getSelectedFeatures()[0].model.attributes;
@@ -552,6 +558,12 @@
                                <ul class="additional-attributes list-unstyled side-panel-section">
                                  <li id="gas-update-time">${getlastupdate(link)}</li>
                                </ul>
+                               <div class="WMEBED-report">
+                                 <i class="fab fa-github" style="font-size: 13px; padding-right:5px"></i>
+                                 <div style="display: inline-block">
+                                   <a id="WMEBED-report-an-issue-gas">Report an Issue</a>
+                                 </div>
+                               </div>
                              </div>
                             </form>
                          </div>`
@@ -585,6 +597,12 @@
                               <ul class="additional-attributes list-unstyled side-panel-section">
                                 <li id="gas-update-time">${getlastupdate(link)}</li>
                               </ul>
+                               <div class="WMEBED-report">
+                                 <i class="fab fa-github" style="font-size: 13px; padding-right:5px"></i>
+                                 <div style="display: inline-block">
+                                   <a id="WMEBED-report-an-issue-gas">Report an Issue</a>
+                                 </div>
+                               </div>
                             </div>
                           </form>
                         </div>`
@@ -601,7 +619,7 @@
                                     <div style="text-align:center;padding-top:20px">
                                       <i class="fab fa-github" style="font-size: 13px; padding-right:5px"></i>
                                       <div style="display: inline-block">
-                                        <a target="_blank" href="https://github.com/TheCre8r/WME-BackEnd-Data/issues/new?title=Missing%20Gas%20Prices&body=${encodeURIComponent("Permalink: "+$(".WMEFP-GLOBAL-PL").context.URL.toString())}" id="WMEBED-report-an-issue">Report an Issue</a>
+                                        <a target="_blank" href="https://github.com/TheCre8r/WME-BackEnd-Data/issues/new?title=Missing%20Gas%20Prices&body=${encodeURIComponent("Permalink: "+$("#WMEFP-GLOBAL-PL").attr('href').toString())}" id="WMEBED-report-an-issue">Report an Issue</a>
                                       </div>
                                     </div>
                                   </div>
@@ -612,6 +630,14 @@
                     );
                 }
             }
+            $('#WMEBED-report-an-issue-gas').click(function(){ //line 570
+                if (confirm(`Reminder:\nGas prices can't be updated in WME.\nPlease do not report incorrect gas prices.`)){
+                    window.open(
+                        `https://github.com/TheCre8r/WME-BackEnd-Data/issues/new?title=Missing%20Gas%20Prices&body=${encodeURIComponent("Permalink: "+$("#WMEFP-GLOBAL-PL").attr('href').toString())}`,
+                        '_blank' //New window
+                    );
+                }
+            });
             let spot = $('#landmark-edit-general > form > div').length - 1;
             $('#landmark-edit-general > form > div:nth-child('+spot+')').after($EP2);
             log("Button Added");
@@ -627,7 +653,7 @@
                     }
                     let i = 0;
                     let count = 0;
-                    while (i < data.venue.external_providers.length) {
+                    while (data.venue.external_providers != undefined && i < data.venue.external_providers.length) {
                         if (data.venue.external_providers[i].provider === "Google") {
                             log("Google Skipped");
                         } else {
@@ -636,6 +662,11 @@
                                 $("#EP2-link").text(data.venue.external_providers[i].provider);
                                 if (data.venue.external_providers[i].provider == "Yext") {
                                     $("#EP2-link").prepend('<img id="EP2-img" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAIAAADZF8uwAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAYdEVYdFNvZnR3YXJlAHBhaW50Lm5ldCA0LjEuM40k/WcAAAF+SURBVChTPY87T9xAFIXn7xGvH7BZEvGwPc4+gKy91mSBgjIpoSOioIiEUqRIlCIIgRQaFAUh0dBQJlRICEUiWTwPz9w7jEHKreZqzrnnO2S+PwqTMoxf31XcWrCPA6Dfbr73F4ZBUvw4vyBSillaeHTcpgXnUmvtFBNVtyjzUzbfzRE1sagrXrcH7Fk2bi30QPE/XE53WWew0ekzpWtrDUEEtPbz4XHg7mXj3b1Pk3sepWWQlFXz5wCAACJa0Eb7c90gHfnpSBj8fX3z7ftPa5STWYtEoWlQ0UolwjQPMtam+d9KOvP/HqQGsG5Hy5WI0qHj9eIh1wa1MU9+J2oMxhoNbboc0WKKMqH05a+rj18PEJ2uCSEOyL2/7B8FLqu3vvNh765SQZw/H6xLhwuqEblcCRBlpUfZ1AuKWN8LObu01oqZv7isH8kIlyJMVrzszUySQ1MVAWAipEcL/9Xqy35RgyHpSulnLKLl7b/qCdMNGPlua9uVDSk7OT17AAK+PGNnA1kxAAAAAElFTkSuQmCC">');
+                                } else if (data.venue.external_providers[i].provider == "ParkMe") {
+                                    $("#EP2-link").prepend('<img id="EP2-img" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAOCAYAAAAfSC3RAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAYdEVYdFNvZnR3YXJlAHBhaW50Lm5ldCA0LjEuM40k/WcAAADESURBVDhPlZExDgFREIYnoadQKF3BDRRKd3AFx6BSOIFKRKdRaTiBUhSKLegkFKLB/73dpzIveV/yZWfmzeTtztof2nIhH5XE1JK05Fl+5LN6IjXOXKaSxlvIzPYyDnPm8pY0MQANuZXUCgoeNGzK8EddXiVnLiNZk4OQmTXlXDJ0oeAxlEfJYmAlGcIZBY+dpOklWVAc4rbkVpeSxruM/5FbOzJJ/J5TyDKYSAZ55SzYKoPjkGXQl2vZC1kGXXkowxRmXxlhNb2nwJsAAAAAAElFTkSuQmCC">');
+                                    $("#EP2-link").attr("href",`https://www.parkme.com/lot/${data.venue.external_providers[i].id}`);
+                                    $("#EP2-link").attr("target","_blank");
+                                    $("#EP2-link").css({cursor:"pointer"});
                                 } else if (data.venue.external_providers[i].provider == "MapFuel") {
                                     $("#EP2-link").prepend('<i id="EP2-img-fa" class="fas fa-gas-pump" style="font-size: 13px;"></i> ');
                                 } else if (data.venue.external_providers[i].provider == "WazeAds") {
@@ -676,7 +707,7 @@
                     //if (addedNode.nodeType === Node.ELEMENT_NODE && !$('#ExternalProviders2').length && addedNode.querySelector('div.external-providers-view') && WazeWrap.hasPlaceSelected()) {
                     if (addedNode.nodeType === Node.ELEMENT_NODE && !$('#ExternalProviders2').length && WazeWrap.hasPlaceSelected()) {
                         insertExternalProviders2();
-                        log("Loaded insertExternalProviders2 "+ $(addedNode).attr('class'));
+                        //log("Loaded insertExternalProviders2 "+ $(addedNode).attr('class'));
                     }
                 }
             });
