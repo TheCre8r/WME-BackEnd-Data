@@ -359,8 +359,8 @@
         let graphicUrl = `https://ads-resources-legacy.waze.com/resources/images/1.0/2x/${logo}.png`;
         //log(graphicUrl);
         let adpinPt=new OL.Geometry.Point(x,y);
-        adpinPt.transform(W.map.displayProjection, W.map.projection);
-        //adpinPt.transform(W.map.projection, W.map.displayProjection);
+        adpinPt.transform(W.map.displayProjection, W.map.getProjectionObject);
+        //adpinPt.transform(W.map.getProjectionObject, W.map.displayProjection);
         let point = new OL.Geometry.Point(adpinPt.x, adpinPt.y);
         let style = {strokeColor: color,
                      strokeWidth: '2',
