@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME BackEnd Data
 // @namespace    https://github.com/thecre8r/
-// @version      2019.01.30.03
+// @version      2020.06.01.00
 // @description  Shows Hidden Attributes, AdPins, and Gas Prices for Applicable Places
 // @include      https://www.waze.com/editor*
 // @include      https://www.waze.com/*/editor*
@@ -18,7 +18,7 @@
 // ==/UserScript==
 
 /* global W */
-/* global OL */
+/* global OpenLayers */
 /* ecmaVersion 2017 */
 /* global $ */
 /* global I18n */
@@ -47,7 +47,7 @@
         log("Update Alert Ran");
         let versionChanges = [
             SCRIPT_NAME + ' v' + SCRIPT_VERSION + ' changes:',
-            ''
+            'WME Compatibility Update'
         ].join('\n');
         if (localStorage === void 0) {
             return;
@@ -346,7 +346,7 @@
         let center4326 = WazeWrap.Geometry.ConvertTo4326(center.lon, center.lat);
         let lat = Math.round(center4326.lat * 1000000) / 1000000;
         let lon = Math.round(center4326.lon * 1000000) / 1000000;
-        return new OL.LonLat(lon, lat);
+        return new OpenLayers.LonLat(lon, lat);
     }
     String.prototype.titleCase = function(n) {
         return this.toLowerCase().split(' ').map(function(word) {
@@ -358,23 +358,23 @@
         log(`Make a ${color.titleCase()} Ad Pin at https://www.waze.com/en-US/editor/?lon=${x}&lat=${y}&zoom=${W.map.zoom}`)
         let graphicUrl = `https://ads-resources-legacy.waze.com/resources/images/1.0/2x/${logo}.png`;
         //log(graphicUrl);
-        let adpinPt=new OL.Geometry.Point(x,y);
-        adpinPt.transform(W.map.displayProjection, W.map.projection);
-        //adpinPt.transform(W.map.projection, W.map.displayProjection);
-        let point = new OL.Geometry.Point(adpinPt.x, adpinPt.y);
+        let adpinPt=new OpenLayers.Geometry.Point(x,y);
+        adpinPt.transform(W.map.displayProjection, W.map.getProjectionObject());
+        //adpinPt.transform(W.map.getProjectionObject(), W.map.displayProjection);
+        let point = new OpenLayers.Geometry.Point(adpinPt.x, adpinPt.y);
         let style = {strokeColor: color,
                      strokeWidth: '2',
                      strokeDashstyle: 'solid',
                      pointRadius: '15',
                      fillOpacity: '0'};
-        let feature = new OL.Feature.Vector(point, {}, style);
+        let feature = new OpenLayers.Feature.Vector(point, {}, style);
 
         let adpinPtOffset1 = adpinPt.clone();
         let adpinPtOffset2 = adpinPt.clone();
         adpinPtOffset1.y += 20;
         //adpinPtOffset1.y += 16;
         adpinPtOffset2.y += 20;
-        let marker1 = new OL.Feature.Vector(adpinPtOffset1, null, {
+        let marker1 = new OpenLayers.Feature.Vector(adpinPtOffset1, null, {
             strokeColor: color,
             fillColor: 'white',
             strokeWidth: '45',
@@ -387,14 +387,14 @@
             //graphicWidth: 50,
             fillOpacity: '1'
         });
-        let marker2 = new OL.Feature.Vector(adpinPtOffset2, null, {
+        let marker2 = new OpenLayers.Feature.Vector(adpinPtOffset2, null, {
             externalGraphic: graphicUrl,
             graphicWidth: 38,
             graphicHeight: 28,
             fillOpacity: 1
         });
-        let lsLine1 = new OL.Geometry.LineString([adpinPt, adpinPtOffset1]);
-        let lineFeature1 = new OL.Feature.Vector(lsLine1, {}, {
+        let lsLine1 = new OpenLayers.Geometry.LineString([adpinPt, adpinPtOffset1]);
+        let lineFeature1 = new OpenLayers.Feature.Vector(lsLine1, {}, {
             strokeWidth: 3,
             strokeDashstyle: 'solid',
             strokeColor: 'white',
@@ -528,10 +528,10 @@
         if(W.selectionManager.getSelectedFeatures()[0].model.type === "venue") {
             if (W.selectionManager.getSelectedFeatures()[0].model.attributes.categories.indexOf("GAS_STATION") >= 0){
                 getlastupdate(link)
-                $('.tabs-container ul').append('<li><a data-toggle="tab" id="gas-tab" href="#landmark-gas"><span class="fas fa-gas-pump"></span></a></li>');
+                $('.tabs-container ul').append('<li><a data-toggle="tab" id="gas-tab" href="#venue-gas"><span class="fas fa-gas-pump"></span></a></li>');
                 if (SERVER.name == "usa") {
-                    $('.landmark').find('.tab-content').append(
-                        `<div class="tab-pane" id="landmark-gas">
+                    $('.venue').find('.tab-content').append(
+                        `<div class="tab-pane" id="venue-gas">
                            <form class="attributes-form">
                              <div class="side-panel-section">
                                <div class="form-group">
@@ -569,8 +569,8 @@
                          </div>`
                     );
                 } else if (SERVER.name == "row") {
-                    $('.landmark').find('.tab-content').append(
-                        `<div class="tab-pane" id="landmark-gas">
+                    $('.venue').find('.tab-content').append(
+                        `<div class="tab-pane" id="venue-gas">
                           <form class="attributes-form">
                             <div class="side-panel-section">
                               <div class="form-group">
@@ -608,8 +608,8 @@
                         </div>`
                     );
                 } else {
-                    $('.landmark').find('.tab-content').append(
-                        `<div class="tab-pane" id="landmark-gas">
+                    $('.venue').find('.tab-content').append(
+                        `<div class="tab-pane" id="venue-gas">
                             <form class="attributes-form">
                               <div class="side-panel-section">
                                 <div class="form-group">
@@ -638,8 +638,8 @@
                     );
                 }
             });
-            let spot = $('#landmark-edit-general > form > div').length - 1;
-            $('#landmark-edit-general > form > div:nth-child('+spot+')').after($EP2);
+            let spot = $('#venue-edit-general > form > div').length - 1;
+            $('#venue-edit-general > form > div:nth-child('+spot+')').after($EP2);
             log("Button Added");
             getAds(latlon,venue);
             if (link.toString().indexOf("venues.-") >= 0) {
@@ -691,7 +691,7 @@
         initializeSettings();
 
         // Add the layer
-        _adPinsLayer = new OL.Layer.Vector("wmeEpdLayerAdPins",{uniqueName: "__wmeEpdLayerAdPins"});
+        _adPinsLayer = new OpenLayers.Layer.Vector("wmeEpdLayerAdPins",{uniqueName: "__wmeEpdLayerAdPins"});
         W.map.addLayer(_adPinsLayer);
         _adPinsLayer.setVisibility(_settings.AdPin);
 
