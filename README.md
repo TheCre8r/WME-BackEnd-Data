@@ -15,10 +15,14 @@ https://github.com/TheCre8r/WME-BackEnd-Data/raw/master/WME-BED.user.js
 ## Version History
 
 2018.12.28.00 - Initial Release
+2019.01.31.00 - Added Report and Issue for Gas Price Tab, ParkMe capability
+2020.06.01.00 - WME Compatibility Updates
 
 ## Contributors
 
 * **The_Cre8r**
+* **jm6087** - *Compatibility Updates*
+* **ABelter** - *Compatibility Updates*
 
 ## Thanks
 
