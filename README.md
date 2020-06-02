@@ -1,5 +1,5 @@
 <link href="https://github.com/TheCre8r/WME-BackEnd-Data/raw/master/styles/index.css" rel="stylesheet"></link>
-<h1><img id="wme-bed-img" src="https://raw.githubusercontent.com/TheCre8r/WME-BackEnd-Data/master/images/fa-bed.svg?sanitize=true" width="100">&nbsp;&nbsp;&nbsp;WME BackEnd</h1>
+<h1><img id="wme-bed-img" src="https://raw.githubusercontent.com/TheCre8r/WME-BackEnd-Data/master/images/fa-bed.svg?sanitize=true" width="100">&nbsp;&nbsp;&nbsp;WME BackEnd Data</h1>
 
 ![WME-BED](https://github.com/TheCre8r/WME-BackEnd-Data/blob/master/images/WMEBED.PNG?raw=true)
 
@@ -14,9 +14,9 @@ https://github.com/TheCre8r/WME-BackEnd-Data/raw/master/WME-BED.user.js
 
 ## Version History
 
-2018.12.28.00 - Initial Release
-2019.01.31.00 - Added Report and Issue for Gas Price Tab, ParkMe capability
-2020.06.01.00 - WME Compatibility Updates
+* 2018.12.28.00 - Initial Release
+* 2019.01.31.00 - Added Report and Issue for Gas Price Tab, ParkMe capability
+* 2020.06.01.00 - WME Compatibility Updates
 
 ## Contributors
 
