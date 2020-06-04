@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME BackEnd Data
 // @namespace    https://github.com/thecre8r/
-// @version      2020.06.01.00
+// @version      2020.06.04.00
 // @description  Shows Hidden Attributes, AdPins, and Gas Prices for Applicable Places
 // @include      https://www.waze.com/editor*
 // @include      https://www.waze.com/*/editor*
@@ -619,7 +619,7 @@
                                     <div style="text-align:center;padding-top:20px">
                                       <i class="fab fa-github" style="font-size: 13px; padding-right:5px"></i>
                                       <div style="display: inline-block">
-                                        <a target="_blank" href="https://github.com/TheCre8r/WME-BackEnd-Data/issues/new?title=Missing%20Gas%20Prices&body=${encodeURIComponent("Permalink: "+$("#WMEFP-GLOBAL-PL").attr('href').toString())}" id="WMEBED-report-an-issue">Report an Issue</a>
+                                        <a target="_blank" href="https://github.com/TheCre8r/WME-BackEnd-Data/issues/new?title=Missing%20Gas%20Prices&body=${encodeURIComponent("Permalink: "+$(".WazeControlPermalink .permalink").attr('href').toString())}" id="WMEBED-report-an-issue">Report an Issue</a>
                                       </div>
                                     </div>
                                   </div>
@@ -633,7 +633,7 @@
             $('#WMEBED-report-an-issue-gas').click(function(){ //line 570
                 if (confirm(`Reminder:\nGas prices can't be updated in WME.\nPlease do not report incorrect gas prices.`)){
                     window.open(
-                        `https://github.com/TheCre8r/WME-BackEnd-Data/issues/new?title=Missing%20Gas%20Prices&body=${encodeURIComponent("Permalink: "+$("#WMEFP-GLOBAL-PL").attr('href').toString())}`,
+                        `https://github.com/TheCre8r/WME-BackEnd-Data/issues/new?title=Missing%20Gas%20Prices&body=${encodeURIComponent("Permalink: "+$(".WazeControlPermalink .permalink").attr('href').toString())}`,
                         '_blank' //New window
                     );
                 }
