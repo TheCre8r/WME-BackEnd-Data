@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME BackEnd Data
 // @namespace    https://github.com/thecre8r/
-// @version      2020.06.08.01
+// @version      2020.06.08.02
 // @description  Shows Hidden Attributes, AdPins, and Gas Prices for Applicable Places
 // @include      https://www.waze.com/editor*
 // @include      https://www.waze.com/*/editor*
@@ -9,7 +9,7 @@
 // @include      https://beta.waze.com/*/editor*
 // @include      https://support.google.com/waze/answer/7402261*
 // @exclude      https://www.waze.com/user/editor*
-// @icon         data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><g><path fill="red" d="M176 256c44.11 0 80-35.89 80-80s-35.89-80-80-80-80 35.89-80 80 35.89 80 80 80zm352-128H304c-8.84 0-16 7.16-16 16v144H64V80c0-8.84-7.16-16-16-16H16C7.16 64 0 71.16 0 80v352c0 8.84 7.16 16 16 16h32c8.84 0 16-7.16 16-16v-48h512v48c0 8.84 7.16 16 16 16h32c8.84 0 16-7.16 16-16V240c0-61.86-50.14-112-112-112z" class=""></path></g></svg>
+// @icon         data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><g><path fill="rgb(120, 176, 191)" d="M176 256c44.11 0 80-35.89 80-80s-35.89-80-80-80-80 35.89-80 80 35.89 80 80 80zm352-128H304c-8.84 0-16 7.16-16 16v144H64V80c0-8.84-7.16-16-16-16H16C7.16 64 0 71.16 0 80v352c0 8.84 7.16 16 16 16h32c8.84 0 16-7.16 16-16v-48h512v48c0 8.84 7.16 16 16 16h32c8.84 0 16-7.16 16-16V240c0-61.86-50.14-112-112-112z" class=""></path></g></svg>
 // @author       The_Cre8r
 // @require      https://greasyfork.org/scripts/24851-wazewrap/code/WazeWrap.js
 // @require      https://greasyfork.org/scripts/373256-qrcode-js/code/QRCode-Js.js?version=636795
@@ -1154,7 +1154,7 @@
             $("#edit-panel").hide();
         });
 
-        createTooltip('ad-address','Address as displayed in search autocomplete when searching in the Waze app. Linked places will display the the Waze place address instead of the address on the ad pin.');
+        createTooltip('ad-address','Address as displayed in search autocomplete when searching in the Waze app. Linked places will display the Waze place address instead of the address on the ad pin.');
         createTooltip('ad-open-tooltip','Attempt to open ad in the Waze app.');
     }
 
