@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME BackEnd Data
 // @namespace    https://github.com/thecre8r/
-// @version      2020.06.08.02
+// @version      2020.06.08.03
 // @description  Shows Hidden Attributes, AdPins, and Gas Prices for Applicable Places
 // @include      https://www.waze.com/editor*
 // @include      https://www.waze.com/*/editor*
@@ -40,6 +40,7 @@
     const UPDATE_ALERT = true;
     const USER = {name: null, rank:null};
     const SERVER = {name: null};
+    const COUNTRY = {id: 0, name: null};
 
     let _ads = [];
     let _settings = {};
@@ -381,6 +382,10 @@
         USER.name = W.loginManager.user.userName.toString();
         USER.rank = W.loginManager.user.rank + 1;
         SERVER.name = W.app.getAppRegionCode();
+        if (W.model.countries && W.model.countries.top && typeof W.model.countries.top != 'undefined') {
+            COUNTRY.id = W.model.countries.top.id;
+            COUNTRY.name = W.model.countries.getObjectById(COUNTRY.id).name;
+        }
         function UserTest() {
             return (TESTERS.indexOf(USER.name) > -1 ? `<div class="controls-container"><input type="checkbox" id="WMEBED-Debug" value="on"><label for="WMEBED-Debug">Enable Debug Link</label></div>` : '');
         }
@@ -1588,44 +1593,85 @@
                         `</div>`
                     );
                 } else if (SERVER.name == "row") {
-                    $('.venue').find('.tab-content').append(
-                        `<div class="tab-pane" id="venue-gas">`+
-                            `<form class="attributes-form">`+
-                                `<div class="side-panel-section">`+
-                                    `<div class="form-group">`+
-                                        `<label class="control-label">Gas Prices</label>`+
-                                        `<div style="text-align:center">`+
-                                            `<div style="display: inline-block;">`+
-                                                `<div class="gas-price" id="gas-95">${getgasprice(link,"gas.95")}</div>`+
-                                                `<span class="gas-price-text"style="display: block;text-align: center;font-weight: bold;font-size: 10px;">Super 95</span>`+
-                                            `</div>`+
-                                            `<div style="display: inline-block;">`+
-                                                `<div class="gas-price" id="gas-98">${getgasprice(link,"gas.98")}</div>`+
-                                                `<span style="display: block;text-align: center;font-weight: bold;font-size: 10px;">Super 98</span>`+
-                                            `</div>`+
-                                            `<div style="display: inline-block;">`+
-                                                `<div class="gas-price" id="gas-lpg">${getgasprice(link,"gas.lpg")}</div>`+
-                                                `<span style="display: block;text-align: center;font-weight: bold;font-size: 10px;">LPG</span>`+
-                                            `</div>`+
-                                            `<div style="display: inline-block;">`+
-                                                `<div class="gas-price" id="gas-diesel">${getgasprice(link,"gas.diesel")}</div>`+
-                                                `<span style="display: block;text-align: center;font-weight: bold;font-size: 10px;">Diesel</span>`+
-                                            `</div>`+
-                                        `</div>`+
-                                    `</div>`+
-                                    `<ul class="additional-attributes list-unstyled side-panel-section">`+
-                                        `<li id="gas-update-time">${getlastupdate(link)}</li>`+
-                                    `</ul>`+
-                                   `<div class="WMEBED-report">`+
-                                       `<i class="fab fa-github" style="font-size: 13px; padding-right:5px"></i>`+
-                                       `<div style="display: inline-block">`+
-                                           `<a id="WMEBED-report-an-issue-gas">Report an Issue on GitHub<</a>`+
-                                       `</div>`+
-                                   `</div>`+
-                                `</div>`+
-                            `</form>`+
-                        `</div>`
-                    );
+                    if (COUNTRY.name == "Italy") {
+	                    $('.venue').find('.tab-content').append(
+	                        `<div class="tab-pane" id="venue-gas">`+
+	                            `<form class="attributes-form">`+
+	                                `<div class="side-panel-section">`+
+	                                    `<div class="form-group">`+
+	                                        `<label class="control-label">Gas Prices</label>`+
+	                                        `<div style="text-align:center">`+
+	                                            `<div style="display: inline-block;">`+
+	                                                `<div class="gas-price" id="gas-regular">${getgasprice(link,"gas.regular")}</div>`+
+	                                                `<span class="gas-price-text"style="display: block;text-align: center;font-weight: bold;font-size: 10px;">Diesel</span>`+
+	                                            `</div>`+
+	                                            `<div style="display: inline-block;">`+
+	                                                `<div class="gas-price" id="gas-diesel">${getgasprice(link,"gas.diesel")}</div>`+
+	                                                `<span style="display: block;text-align: center;font-weight: bold;font-size: 10px;">Benzina</span>`+
+	                                            `</div>`+
+	                                            `<div style="display: inline-block;">`+
+	                                                `<div class="gas-price" id="gas-gpl">${getgasprice(link,"gas.gpl")}</div>`+
+	                                                `<span style="display: block;text-align: center;font-weight: bold;font-size: 10px;">GPL</span>`+
+	                                            `</div>`+
+	                                            `<div style="display: inline-block;">`+
+	                                                `<div class="gas-price" id="gas-gas">${getgasprice(link,"gas.gas")}</div>`+
+	                                                `<span style="display: block;text-align: center;font-weight: bold;font-size: 10px;">Metano</span>`+
+	                                            `</div>`+
+	                                        `</div>`+
+	                                    `</div>`+
+	                                    `<ul class="additional-attributes list-unstyled side-panel-section">`+
+	                                        `<li id="gas-update-time">${getlastupdate(link)}</li>`+
+	                                    `</ul>`+
+	                                   `<div class="WMEBED-report">`+
+	                                       `<i class="fab fa-github" style="font-size: 13px; padding-right:5px"></i>`+
+	                                       `<div style="display: inline-block">`+
+	                                           `<a id="WMEBED-report-an-issue-gas">Report an Issue on GitHub<</a>`+
+	                                       `</div>`+
+	                                   `</div>`+
+	                                `</div>`+
+	                            `</form>`+
+	                        `</div>`
+	                    );
+                    } else {
+	                    $('.venue').find('.tab-content').append(
+	                        `<div class="tab-pane" id="venue-gas">`+
+	                            `<form class="attributes-form">`+
+	                                `<div class="side-panel-section">`+
+	                                    `<div class="form-group">`+
+	                                        `<label class="control-label">Gas Prices</label>`+
+	                                        `<div style="text-align:center">`+
+	                                            `<div style="display: inline-block;">`+
+	                                                `<div class="gas-price" id="gas-95">${getgasprice(link,"gas.95")}</div>`+
+	                                                `<span class="gas-price-text"style="display: block;text-align: center;font-weight: bold;font-size: 10px;">Super 95</span>`+
+	                                            `</div>`+
+	                                            `<div style="display: inline-block;">`+
+	                                                `<div class="gas-price" id="gas-98">${getgasprice(link,"gas.98")}</div>`+
+	                                                `<span style="display: block;text-align: center;font-weight: bold;font-size: 10px;">Super 98</span>`+
+	                                            `</div>`+
+	                                            `<div style="display: inline-block;">`+
+	                                                `<div class="gas-price" id="gas-lpg">${getgasprice(link,"gas.lpg")}</div>`+
+	                                                `<span style="display: block;text-align: center;font-weight: bold;font-size: 10px;">LPG</span>`+
+	                                            `</div>`+
+	                                            `<div style="display: inline-block;">`+
+	                                                `<div class="gas-price" id="gas-diesel">${getgasprice(link,"gas.diesel")}</div>`+
+	                                                `<span style="display: block;text-align: center;font-weight: bold;font-size: 10px;">Diesel</span>`+
+	                                            `</div>`+
+	                                        `</div>`+
+	                                    `</div>`+
+	                                    `<ul class="additional-attributes list-unstyled side-panel-section">`+
+	                                        `<li id="gas-update-time">${getlastupdate(link)}</li>`+
+	                                    `</ul>`+
+	                                   `<div class="WMEBED-report">`+
+	                                       `<i class="fab fa-github" style="font-size: 13px; padding-right:5px"></i>`+
+	                                       `<div style="display: inline-block">`+
+	                                           `<a id="WMEBED-report-an-issue-gas">Report an Issue on GitHub<</a>`+
+	                                       `</div>`+
+	                                   `</div>`+
+	                                `</div>`+
+	                            `</form>`+
+	                        `</div>`
+	                    );
+                    }
                 } else if (SERVER.name == "il") {
                     $('.venue').find('.tab-content').append(
                         `<div class="tab-pane" id="venue-gas">`+
