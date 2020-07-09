@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME BackEnd Data
 // @namespace    https://github.com/thecre8r/
-// @version      2020.06.08.03
+// @version      2020.07.08.00
 // @description  Shows Hidden Attributes, AdPins, and Gas Prices for Applicable Places
 // @include      https://www.waze.com/editor*
 // @include      https://www.waze.com/*/editor*
@@ -249,21 +249,24 @@
 
     function getAds(latlon,venue) {
         let venue_name = getNameParts(venue.name).base;
-        venue_name.replace(/\([\w\W]+\)/,'');
-        if (venue_name == "")
-            return;
-        log(`Requesting Ads for ${venue_name}`)
-        console.log(venue)
-        if (_settings.ShowRequestPopUp == true || venue.source == "prompt"){
-            WazeWrap.Alerts.info(GM_info.script.name, ` Requested Ads for ${venue_name}`);
+        let containsCopy = venue.name.includes("(copy)");
+        if (containsCopy == false) {
+            venue_name.replace(/\([\w\W]+\)/,'');
+            if (venue_name == "")
+                return;
+            log(`Requesting Ads for ${venue_name}`)
+            console.log(venue)
+            if (_settings.ShowRequestPopUp == true || venue.source == "prompt"){
+                WazeWrap.Alerts.info(GM_info.script.name, ` Requested Ads for ${venue_name}`);
+            }
+            GM_xmlhttpRequest({
+                url: `https://gapi.waze.com/autocomplete/q?e=${getAdServer()}&c=wd&sll=${latlon.lat},${latlon.lon}&s&q=${venue_name}&gxy=1`,
+                context: venue,
+                method: 'GET',
+                onload: processAdsResponse,
+                onerror: function(result) { log("error: "+ result.status) }
+            })
         }
-        GM_xmlhttpRequest({
-            url: `https://gapi.waze.com/autocomplete/q?e=${getAdServer()}&c=wd&sll=${latlon.lat},${latlon.lon}&s&q=${venue_name}&gxy=1`,
-            context: venue,
-            method: 'GET',
-            onload: processAdsResponse,
-            onerror: function(result) { log("error: "+ result.status) }
-        })
     }
 
     function onAdPinLayerCheckboxChanged(checked) {
