@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME BackEnd Data
 // @namespace    https://github.com/thecre8r/
-// @version      2020.06.08.03
+// @version      2020.10.11.01
 // @description  Shows Hidden Attributes, AdPins, and Gas Prices for Applicable Places
 // @include      https://www.waze.com/editor*
 // @include      https://www.waze.com/*/editor*
@@ -36,7 +36,7 @@
     const STORE_NAME = "WMEBED_Settings";
     const SCRIPT_NAME = GM_info.script.name;
     const SCRIPT_VERSION = GM_info.script.version.toString();
-    const SCRIPT_CHANGES = `Major overhaul. Please see the <a target="_blank" href="https://github.com/TheCre8r/WME-BackEnd-Data/wiki">wiki</a> on Github for complete details.`
+    const SCRIPT_CHANGES = `Added the ability to immediately search venues when loaded from a permalink. Also, fixed some minor style updates.`
     const UPDATE_ALERT = true;
     const USER = {name: null, rank:null};
     const SERVER = {name: null};
@@ -295,7 +295,7 @@
             '#WMEBED-close-ad {color: red;float:right;position: relative;cursor: pointer;}',
             '.WMEBED-report {text-align:center;padding-top:20px;}',
             '#WMEBED-report-an-issue-gas {cursor:pointer;}',
-            '.WMEBED-Button {font-family:"Open Sans",FontAwesome;padding-left:10px;padding-right:10px;margin-top:0px;z-index: 3;}',
+            '.WMEBED-Button {font-family:"Rubik","Boing-light",sans-serif,FontAwesome;padding-left:10px;padding-right:10px;margin-top:0px;z-index: 3;}',
             '.adpin-logo > img {border-radius: 10%;border-color: #c4c3c4;border-width: 1px;border-style: solid;} ',
             '#appLinkQRCode {display: flex;flex-direction: column;position: relative}',
             '#appLinkQRCode > img {display: block;margin: auto;border: 10px solid #FFFFFF;border-radius: 10px;}',
@@ -1910,7 +1910,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
         // Add the layer checkbox to the Layers menu
         WazeWrap.Interface.AddLayerCheckbox('Places', 'Ad pins', _settings.AdPin, onAdPinLayerCheckboxChanged);
-
+        if (getUrlParameter('venues').length>0) {
+            insertExternalProviders2()
+            }
         let observer = new MutationObserver(mutations => {
             mutations.forEach(mutation => {
                 for (let i = 0; i < mutation.addedNodes.length; i++) {
