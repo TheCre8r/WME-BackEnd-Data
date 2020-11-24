@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME BackEnd Data
 // @namespace    https://github.com/thecre8r/
-// @version      2020.10.11.01
+// @version      2020.11.24.01
 // @description  Shows Hidden Attributes, AdPins, and Gas Prices for Applicable Places
 // @include      https://www.waze.com/editor*
 // @include      https://www.waze.com/*/editor*
@@ -36,8 +36,8 @@
     const STORE_NAME = "WMEBED_Settings";
     const SCRIPT_NAME = GM_info.script.name;
     const SCRIPT_VERSION = GM_info.script.version.toString();
-    const SCRIPT_CHANGES = `Added the ability to immediately search venues when loaded from a permalink. Also, fixed some minor style updates.`
-    const UPDATE_ALERT = true;
+    const SCRIPT_CHANGES = `Compatibility update.`
+    const UPDATE_ALERT = false;
     const USER = {name: null, rank:null};
     const SERVER = {name: null};
     const COUNTRY = {id: 0, name: null};
