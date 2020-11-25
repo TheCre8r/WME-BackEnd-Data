@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME BackEnd Data
 // @namespace    https://github.com/thecre8r/
-// @version      2020.11.24.01
+// @version      2020.11.24.02
 // @description  Shows Hidden Attributes, AdPins, and Gas Prices for Applicable Places
 // @include      https://www.waze.com/editor*
 // @include      https://www.waze.com/*/editor*
@@ -30,13 +30,14 @@
 /* global require */
 /* global QRCode */
 /* global Backbone */
+/* global Flatted */
 
 (function() {
     'use strict';
     const STORE_NAME = "WMEBED_Settings";
     const SCRIPT_NAME = GM_info.script.name;
     const SCRIPT_VERSION = GM_info.script.version.toString();
-    const SCRIPT_CHANGES = `Compatibility update.`
+    const SCRIPT_CHANGES = `Refactor and added debug tools.`
     const UPDATE_ALERT = false;
     const USER = {name: null, rank:null};
     const SERVER = {name: null};
@@ -153,15 +154,6 @@
         }
     }
 
-    function getSearchServer() {
-        if (SERVER.name == "row") {
-            return "row-SearchServer";
-        } else if (SERVER.name == "il") {
-            return "il-SearchServer";
-        } else {
-            return "SearchServer";
-        }
-    }
 
     function getAdServer() {
         if (SERVER.name == "row") {
@@ -180,7 +172,7 @@
                 let namesArray = _.uniq(W.model.venues.getObjectArray().filter(venue => WazeWrap.Geometry.isGeometryInMapExtent(venue.geometry)).map(venue => venue.attributes.name));
                 for (var i = 0; i < namesArray.length; i++) {
                     let venue = {id: null, name: namesArray[i]};
-                    if (!venue.name.includes("Parking  -") || !venue.name.includes("Parking -") || !venue.name.includes("Lot -")) {
+                    if (!venue.name.includes("Parking  -") || !venue.name.includes("Parking -") || !venue.name.includes("Lot -") || !venue.name.includes("(copy)") ) {
                         getAds(get4326CenterPoint(),venue)
                     }
                 }
@@ -222,7 +214,7 @@
         let venue = this.context;
         let ad_data;
         //log('this: '+(Object.getOwnPropertyNames(this)));
-        log('AdPin URL: '+encodeURIComponent(this.finalUrl));
+        log('AdPin URL: '+decodeURIComponent(this.finalUrl));
         //log('Venue: '+(Object.getOwnPropertyNames(venue)));
         let gapidata = $.parseJSON(res.responseText);
         //log(gapidata[1]);
@@ -252,7 +244,7 @@
         venue_name.replace(/\([\w\W]+\)/,'');
         if (venue_name == "")
             return;
-        log(`Requesting Ads for ${venue_name}`)
+        //log(`Requesting Ads for ${venue_name}`)
         console.log(venue)
         if (_settings.ShowRequestPopUp == true || venue.source == "prompt"){
             WazeWrap.Alerts.info(GM_info.script.name, ` Requested Ads for ${venue_name}`);
@@ -302,6 +294,7 @@
             '.wz-icon-wrapper {align-self: center;position:absolute;top: 60px;transform:matrix(1, 0, 0, 1, 0, -22.5);}',
             '.wz-icon {background-image: url(https://www.waze.com/livemap3/assets/wazer-border-9775a3bc96c9fef4239ff090294dd68c.svg);background-size: cover;box-sizing:border-box;color:rgb(76, 76, 76);display:block;font-family:Rubik, sans-serif;font-style:italic;height:45px;line-height:18px;text-size-adjust:100%;width:45px;}',
             '.gas-price {text-align:center;cursor:default;background-attachment:scroll;background-clip:border-box;background-color:rgb(255, 255, 255);background-image:none;background-origin:padding-box;background-position-x:0%;background-position-y:0%;background-repeat-x:;background-repeat-y:;background-size:auto;border-bottom-color:rgb(61, 61, 61);border-bottom-left-radius:8px;border-bottom-right-radius:8px;border-bottom-style:none;border-bottom-width:0px;border-image-outset:0px;border-image-repeat:stretch;border-image-slice:100%;border-image-source:none;border-image-width:1;border-left-color:rgb(61, 61, 61);border-left-style:none;border-left-width:0px;border-right-color:rgb(61, 61, 61);border-right-style:none;border-right-width:0px;border-top-color:rgb(61, 61, 61);border-top-left-radius:8px;border-top-right-radius:8px;border-top-style:none;border-top-width:0px;box-shadow:rgba(0, 0, 0, 0.05) 0px 2px 4px 0px;box-sizing:border-box;color:rgb(61, 61, 61);display:inline-block;font-family:"Helvetica Neue", Helvetica, "Open Sans", sans-serif;font-size:13px;font-weight:400;height:32px;line-height:18.5714px;padding-bottom:7px;padding-left:10px;padding-right:10px;padding-top:7px;text-size-adjust:100%;width:60px;-webkit-tap-highlight-color:rgba(0, 0, 0, 0)}',
+            '.fa{font-family:"FontAwesome","Font Awesome 5 Free"}',
             '.fab{font-family:"Font Awesome 5 Brands"}',
             '@font-face{font-family:"Font Awesome 5 Free";font-style:normal;font-weight:400;src:url(https://use.fontawesome.com/releases/v5.6.1/webfonts/fa-regular-400.eot);src:url(https://use.fontawesome.com/releases/v5.6.1/webfonts/fa-regular-400.eot?#iefix) format("embedded-opentype"),url(https://use.fontawesome.com/releases/v5.6.1/webfonts/fa-regular-400.woff2) format("woff2"),url(https://use.fontawesome.com/releases/v5.6.1/webfonts/fa-regular-400.woff) format("woff"),url(https://use.fontawesome.com/releases/v5.6.1/webfonts/fa-regular-400.ttf) format("truetype"),url(https://use.fontawesome.com/releases/v5.6.1/webfonts/fa-regular-400.svg#fontawesome) format("svg")}',
             '.far{font-weight:400}',
@@ -596,6 +589,66 @@
         }
     }
 */
+function JSONStringify(object) {
+    var cache = [];
+    var str = JSON.stringify(object,
+        // custom replacer fxn - gets around "TypeError: Converting circular structure to JSON"
+        function(key, value) {
+            if (typeof value === 'object' && value !== null) {
+                if (cache.indexOf(value) !== -1) {
+                    // Circular reference found, discard key
+                    return;
+                }
+                // Store value in our collection
+                cache.push(value);
+            }
+            return value;
+        }, 4);
+    cache = null; // enable garbage collection
+    return str;
+};
+    function makeModal(title,htmlstring,json,link) {
+        let string;
+        if (htmlstring === undefined && json) {
+        htmlstring =
+            `<div class="modal-dialog">`+
+                `<div class="modal-dialog venue-image-dialog">`+
+                    `<div class="modal-content">`+
+                        //`<div class="prev-button waze-icon-full-arrow-left disabled"></div>`+
+                        //`<div class="next-button waze-icon-full-arrow-right disabled"></div>`+
+                        `<div class="modal-header">`+
+                            `<div class="close" data-dismiss="modal" type="button">×</div>`+
+                            `<div class="venue-name">${title}</div>`+
+                        `</div>`+
+                        `<div class="modal-body">`+
+                            `<div style="white-space: pre;height: 420px; overflow-y: scroll; background-color:#f9f2f4;"><code>`+
+                            `${JSONStringify(json)}`+
+                            `</div></code>`+
+                            `<div class="details">`+
+                                //`<div class="date small"><strong>Added on </strong>November 07, 2020 </div>`+
+                                `<div class="user small"><strong>Source: </strong><a target="_blank" ${string = link === undefined ? "WME" : 'href="'+link+'"'}" rel="noopener noreferrer">${link = link === undefined ? "WME" : "Search Server"}</a></div>`+
+                                //`<div class="delete-button waze-icon-trash">Delete Photo</div>`+
+                            `</div>`+
+                        `</div>`+
+                    `</div>`+
+                `</div>`+
+            `</div>`
+        }
+        $("#dialog-region").append( htmlstring );
+        $("body").addClass("modal-open")
+        $("#dialog-region").addClass("in")
+        $("#dialog-region").css({'display': 'block', 'padding-left': '17px'});
+        $("body").append(`<div class="modal-backdrop in"></div>`);
+
+        $( "#dialog-region > div > div > div > div.modal-header > div.close" ).click(function() {
+            $("#dialog-region > div > div").remove();
+            $("body").removeClass("modal-open")
+            $("#dialog-region").removeClass("in")
+            $("#dialog-region").css({'display': 'none'});
+            $("body > div.modal-backdrop.in").remove()
+        });
+    }
+
     function makeAdPin(ad_data,venue) {
         //makePsudoVenue(ad_data,venue)
         let x = ad_data.x
@@ -612,13 +665,32 @@
         let offset = new OpenLayers.Pixel(-(image.w/2+2), -image.h+10); // Match to size of .adpin-background image
         let icon = new OpenLayers.Icon(`https://raw.githubusercontent.com/TheCre8r/WME-BackEnd-Data/master/images/adpin.svg?sanitize=true`, size, offset);
         let marker = new OpenLayers.Marker(new OpenLayers.LonLat(adpinPt.x,adpinPt.y),icon);
+        let markerDiv;
+        let markerId;
+        let color;
 
-        if (id == 'shelter') {
-            let shelter_image = {h: null, w:null};
-            shelter_image.h = 50;
-            shelter_image.w = 50;
+        function clicky() {
+            console.log(markerDiv);
+            console.log(marker);
+            if (_settings.PanOnClick) {
+                W.map.olMap.panTo(marker.lonlat)
+            }
+            if (color == "white" || color == "grey"){
+                let venue_id = [ad_data.v.replace("venues.","")];
+                let temp1 = W.model.venues.getByIds(venue_id)
+                W.selectionManager.setSelectedModels(temp1)
+            }
+            hi(ad_data,marker);
+            if (_settings.AutoSelectAdTab && document.getElementById('advert-tab')) {
+                document.getElementById('advert-tab').click();
+            }
+        }
+
+        if (id == 'shelter' && !_ads.includes(id)) {
+            _ads.push(id);
+            let shelter_image = {h: 50, w:50};
             let shelter_size = new OpenLayers.Size(shelter_image.w,shelter_image.h); //w,h
-            let shelter_offset = new OpenLayers.Pixel(-(shelter_image.w/2), -shelter_image.h+6);
+            let shelter_offset = new OpenLayers.Pixel(-(shelter_image.w/2)+1, -shelter_image.h+6);
             let shelter_icon;
             let shelter_marker;
 
@@ -628,22 +700,23 @@
             _adPinsLayer.addMarker(shelter_marker);
             let markerId_logo = shelter_marker.icon.imageDiv.id;
             let markerDiv_logo = document.getElementById(markerId_logo);
-            markerDiv_logo.className = "adpin-logo";
+            markerDiv_logo.className = "shelter-logo";
             _ads['logo-' + id] = shelter_marker;
+
+            shelter_marker.events.register('click', marker, function(evt) {
+                clicky();
+            });
+
         } else if (!_ads.includes(id)){
             _ads.push(id);
 
-            let logo_image = {h: null, w:null};
-            logo_image.h = 35;
-            logo_image.w = 44;
+            let logo_image = {h: 35, w:44};
             let logo_size = new OpenLayers.Size(logo_image.w,logo_image.h); //w,h
             let logo_offset = new OpenLayers.Pixel(-(logo_image.w/2), -logo_image.h-9);
             let logo_icon;
             let logo_marker;
 
-            let badge_image = {h: null, w:null};
-            badge_image.h = 20;
-            badge_image.w = 20;
+            let badge_image = {h: 20, w:20};
             let badge_size = new OpenLayers.Size(badge_image.w,badge_image.h); //w,h
             let badge_offset = new OpenLayers.Pixel(-(badge_image.w/2)+24, -badge_image.h-34);
             let badge_icon;
@@ -654,12 +727,11 @@
             //Always show the pin
             marker.id = 'adpin_'+id; // not needed
             _adPinsLayer.addMarker(marker);
-            let markerId = marker.icon.imageDiv.id;
-            let markerDiv = document.getElementById(markerId);
+            markerId = marker.icon.imageDiv.id;
+            markerDiv = document.getElementById(markerId);
             markerDiv.className = "adpin-background";
             _ads['background-' + id] = marker;
 
-            let color;
             if (venue != null && id === "venues."+venue.id) {
                 color = "white";
                 hi(ad_data,marker)
@@ -682,9 +754,13 @@
             markerDiv_logo.className = "adpin-logo";
             _ads['logo-' + id] = logo_marker;
 
-            if (color == "blue") {
-                //badge
-                badge_icon = new OpenLayers.Icon(`https://raw.githubusercontent.com/TheCre8r/WME-BackEnd-Data/master/images/google_linked.svg?sanitize=true`, badge_size, badge_offset);
+            //Build badge for only red and blue
+            if (color == "blue" || color == 'red') {
+                if (color == "blue") {
+                    badge_icon = new OpenLayers.Icon(`https://raw.githubusercontent.com/TheCre8r/WME-BackEnd-Data/master/images/google_linked.svg?sanitize=true`, badge_size, badge_offset);
+                } else { // if (color == 'red')
+                    badge_icon = new OpenLayers.Icon(`https://raw.githubusercontent.com/TheCre8r/WME-BackEnd-Data/master/images/unlinked.svg?sanitize=true`, badge_size, badge_offset);
+                }
                 badge_marker = new OpenLayers.Marker(new OpenLayers.LonLat(adpinPt.x,adpinPt.y),badge_icon);
                 badge_marker.id = 'adpin_icon_'+id; // not needed
                 _adPinsLayer.addMarker(badge_marker);
@@ -694,89 +770,16 @@
                 _ads['badge-' + id] = badge_marker;
 
                 badge_marker.events.register('click', marker, function(evt) {
-                    console.log(markerDiv);
-                    console.log(marker);
-                    if (_settings.PanOnClick) {
-                        W.map.olMap.panTo(marker.lonlat)
-                    }
-                    hi(ad_data,marker)
-                });
-            } else if (color == 'red') {
-                //badge
-                badge_icon = new OpenLayers.Icon(`https://raw.githubusercontent.com/TheCre8r/WME-BackEnd-Data/master/images/unlinked.svg?sanitize=true`, badge_size, badge_offset);
-                badge_marker = new OpenLayers.Marker(new OpenLayers.LonLat(adpinPt.x,adpinPt.y),badge_icon);
-                badge_marker.id = 'adpin_icon_'+id; // not needed
-                _adPinsLayer.addMarker(badge_marker);
-                let markerId_badge = badge_marker.icon.imageDiv.id;
-                let markerDiv_badge = document.getElementById(markerId_badge);
-                markerDiv_badge.className = "adpin-badge";
-                _ads['badge-' + id] = badge_marker;
-
-                badge_marker.events.register('click', marker, function(evt) {
-                    console.log(markerDiv);
-                    console.log(marker);
-                    if (_settings.PanOnClick) {
-                        W.map.olMap.panTo(marker.lonlat)
-                        //W.map.olMap.panTo(marker.lonlat)
-                    }
-                    hi(ad_data,marker)
-                    if (_settings.AutoSelectAdTab) {
-                        document.getElementById('advert-tab').click();
-                    }
+                    clicky();
                 });
             }
-            if (color == "white" || color == "grey") {
-                marker.events.register('click', marker, function(evt) {
-                    console.log(markerDiv);
-                    console.log(marker);
-                    if (_settings.PanOnClick) {
-                        W.map.olMap.panTo(marker.lonlat)
-                    }
-                    let venue_id = [ad_data.v.replace("venues.","")];
-                    let temp1 = W.model.venues.getByIds(venue_id)
-                    W.selectionManager.setSelectedModels(temp1)
-                    hi(ad_data,marker);
-                    if (_settings.AutoSelectAdTab) {
-                        document.getElementById('advert-tab').click();
-                    }
-                });
 
-                logo_marker.events.register('click', marker, function(evt) {
-                    console.log(markerDiv);
-                    console.log(marker);
-                    if (_settings.PanOnClick) {
-                        W.map.olMap.panTo(marker.lonlat)
-                    }
-                    let venue_id = [ad_data.v.replace("venues.","")];
-                    let temp1 = W.model.venues.getByIds(venue_id)
-                    W.selectionManager.setSelectedModels(temp1)
-                    hi(ad_data,marker)
-                    if (_settings.AutoSelectAdTab)
-                        document.getElementById('advert-tab').click();
-                });
-            } else {
-                marker.events.register('click', marker, function(evt) {
-                    console.log(markerDiv);
-                    console.log(marker);
-                    if (_settings.PanOnClick) {
-                        W.map.olMap.panTo(marker.lonlat)
-                    }
-                    hi(ad_data,marker)
-                    if (_settings.AutoSelectAdTab)
-                        document.getElementById('advert-tab').click();
-                });
-
-                logo_marker.events.register('click', marker, function(evt) {
-                    console.log(markerDiv);
-                    console.log(marker);
-                    if (_settings.PanOnClick) {
-                        W.map.olMap.panTo(marker.lonlat)
-                    }
-                    hi(ad_data,marker)
-                    if (_settings.AutoSelectAdTab)
-                        document.getElementById('advert-tab').click();
-                });
-            }
+            marker.events.register('click', marker, function(evt) {
+                clicky();
+            });
+            logo_marker.events.register('click', marker, function(evt) {
+                clicky();
+            });
 
             //wmeMarkers.addMarker(new OpenLayers.Marker(new OpenLayers.LonLat(W.map.getCenter().lon,W.map.getCenter().lat),icon));
             //wmeMarkers.addMarker(new OpenLayers.Marker(new OpenLayers.LonLat(W.map.getCenter().lon,W.map.getCenter().lat+20),icon.clone()));
@@ -798,19 +801,15 @@
         else {
             $.getJSON(link,function(data) {
                 if (data.venue.changed_products){
-                    //log (data.venue.changed_products);
                     let changed_products = data.venue.changed_products.filter(function(i){return i.key == type;})[0];
                     let cost = (changed_products && changed_products.value.price) ? data.venue.currency[0].toString()+String.fromCharCode(160)+changed_products.value.price : "N/A";
                     type = type.replace(/\./,'-').toString();
                     $('#'+type).text(cost);
-                    //log (cost)
                 } else if (data.venue.product) {
-                    //log (data.venue.product);
                     let product = data.venue.product.filter(function(i){return i.id == type;})[0];
                     let cost = (product && product.price) ? data.venue.currency[0].toString()+String.fromCharCode(160)+product.price : "N/A";
                     type = type.replace(/\./,'-').toString();
                     $('#'+type).text(cost);
-                    //log (cost)
                 } else {
                     type = type.replace(/\./,'-').toString();
                     $('#'+type).text("N/A");
@@ -830,8 +829,6 @@
         else {
             $.getJSON(link,function(data) {
                 if (data.venue.changed_products) {
-                    //log("venue.changed_products")
-                    //log(data.venue.changed_products)
                     if (data.venue.changed_products.filter(function(i){return i.key == "gas.regular";})[0]) {
                         date = data.venue.changed_products.filter(function(i){return i.key == "gas.regular";})[0].value.updateTime;
                         user = data.venue.changed_products.filter(function(i){return i.key == "gas.regular";})[0].value.userName;
@@ -842,14 +839,12 @@
                         userid = data.venue.changed_products.filter(function(i){return i.key == "gas.95";})[0].value.userId;
                     }
                     date = timeConverter(date);
-                    //log (date)
                     if (user && date){
                         $('#gas-update-time').html(`Updated: ${date} by <a target="_blank" href="https://www.waze.com/user/editor/${user}">${user}</a>`);
                     } else {
                         $('#gas-update-time').html(`Updated: ${date} by ${userid} </a>`);
                     }
                 } else if (data.venue.product) {
-                    //log (data.venue.product);
                     if (data.venue.changed_products.filter(function(i){return i.key == "gas.regular";})[0]) {
                         date = data.venue.product.filter(function(i){return i.id == "gas.regular";})[0].last_updated;
                         user = data.venue.product.filter(function(i){return i.id == "gas.regular";})[0].updated_by;
@@ -890,6 +885,7 @@
         var time = month + ' ' + date + ', ' + year + ' ' + hour + ':' + min;
         return time;
     }
+
     function hi(ad_data,marker){
         let id = ad_data.v
         //let id = 'advertisement.poi-' + ad_data.j.campaignId;
@@ -910,13 +906,11 @@
             isVenueSelected = true;
             if (W.selectionManager.getSelectedFeatures()[0].geometry.x && W.selectionManager.getSelectedFeatures()[0].geometry.y){
                 selectedvenue = WazeWrap.Geometry.ConvertTo4326(W.selectionManager.getSelectedFeatures()[0].geometry.x,W.selectionManager.getSelectedFeatures()[0].geometry.y)
-                selectedvenue.lat = Math.round(selectedvenue.lat * 1000000) / 1000000;
-                selectedvenue.lon = Math.round(selectedvenue.lon * 1000000) / 1000000;
             } else {
                 selectedvenue = WazeWrap.Geometry.ConvertTo4326((W.selectionManager.getSelectedFeatures()[0].geometry.components[0].bounds.left + W.selectionManager.getSelectedFeatures()[0].geometry.components[0].bounds.right) / 2,(W.selectionManager.getSelectedFeatures()[0].geometry.components[0].bounds.top + W.selectionManager.getSelectedFeatures()[0].geometry.components[0].bounds.bottom) / 2)
-                selectedvenue.lat = Math.round(selectedvenue.lat * 1000000) / 1000000;
-                selectedvenue.lon = Math.round(selectedvenue.lon * 1000000) / 1000000;
             }
+            selectedvenue.lat = Math.round(selectedvenue.lat * 1000000) / 1000000;
+            selectedvenue.lon = Math.round(selectedvenue.lon * 1000000) / 1000000;
         }
         let description = `Campaign ID: ${ad_data.j.campaignId} \r\n`;
         if (isUnlinked) {
@@ -927,7 +921,7 @@
             description = `Campaign ID: ${ad_data.j.campaignId} \r\n`;
         }
 
-        let htmlstring = 
+        let htmlstring =
             `<div>`+
                 `<div class="venue sidebar-column venue-category-advertisement">`+
                     `${(!selectedvenue ?
@@ -992,7 +986,6 @@
             `</div>`
         $("#user-info").hide();
         $("#edit-panel").show();
-        log("Test");
         if(W.selectionManager.getSelectedFeatures().length > 0 && W.selectionManager.getSelectedFeatures()[0].model.type === "venue" && $('#advert-tab').length == '0') {
             log("Success");
             $('.tabs-container ul').append('<li><a data-toggle="tab" id="advert-tab" href="#venue-ad"><span class="fas fa-ad fa-lg"></span></a></li>');
@@ -1113,7 +1106,7 @@
             let html = '<div class="tx-header"><div class="flex-noshrink" style="width:10%"><div class="flex-noshrink"><span class="fa fa-plus" style="font-size:20px;color:#A1A6AB;"></span></div>'
             + '</div><div class="tx-summary" style="width:100%;">'
             + '<div class="tx-preview" style="position: relative;top: 50%;transform: translateY(-50%);font-size: 13px;">Create New Place at Ad Pin</div>'
-            +'</div><div class="flex-noshrink"></div></div>';
+            + '</div><div class="flex-noshrink"></div></div>';
             createLink.innerHTML = html;
             listItem.append(createLink);
             createLink.onclick = function() {
@@ -1192,9 +1185,6 @@
         Object.keys(W.model.venues.objects).forEach( function(venueID) {
             if (!W.model.venues.objects[venueID].outOfScope) {
                 let venue = W.model.venues.objects[venueID].attributes;
-
-
-
                 let point = new OpenLayers.Geometry.Point(ad_data.x, ad_data.y);
                 point.transform(W.map.displayProjection, W.map.getProjectionObject());
                 let distanceFromAdPin = venue.geometry.distanceTo(point);
@@ -1528,23 +1518,12 @@
         return addressDetails;
     }
 
-    function spiderclick(){
-        /*
-     * Display a base64 URL inside an iframe in another window.
-    */
-        let win = window.open();
-        let base64URL = `{ "details":"Coming Soon" }`;
-        win.document.write('<head><title>Secret Spider Page</title></head><body><iframe src="data:application/json;utf8,' + encodeURIComponent(base64URL) + '" frameborder="0" style="border:0; top:0px; left:0px; bottom:0px; right:0px; width:100%; height:100%;" allowfullscreen></iframe></body>');
-    }
-
     function insertExternalProviders2(){
         let latlon = get4326CenterPoint();
         let venue = W.selectionManager.getSelectedFeatures()[0].model.attributes;
-        let link = `https://${window.location.hostname}/${getSearchServer()}/mozi?lon=${latlon.lon}&lat=${latlon.lat}&format=PROTO_JSON_FULL&venue_id=venues.${venue.id}`;
-        //if (loadedsettings.debug)
-        //    log("loadedsettings.debug " + loadedsettings.debug);
+        let link = `https://${window.location.hostname + W.Config.search.server}?lon=${latlon.lon}&lat=${latlon.lat}&format=PROTO_JSON_FULL&venue_id=venues.${venue.id}`;
         function DebugCheck() {
-            return (_settings.Debug == true ? `<a target="_blank" href=${link}><i class="fas fa-bug EP2-icon" style="color: #8c8c8c;"></i></a><i id="EP2-spider" class="fas fa-spider EP2-icon" style="color: #8c8c8c;"></i>` :``);
+            return (_settings.Debug == true ? `<i class="fas fa-bug EP2-icon" id="EP2-bug" style="color: #8c8c8c;"></i><i id="EP2-spider" class="fas fa-spider EP2-icon" style="color: #8c8c8c;"></i>` :``)
         }
         //<i id="ep2-tooltip" class="EP2-icon waze-tooltip" data-toggle="tooltip" data-original-title="" title=""></i>
         let $EP2 = $(
@@ -1800,7 +1779,14 @@
         createTooltip('ep2-tooltip','3rd-Party sources that may share data with Waze. If more information is available, the button can be clicked.');
 
         $("#EP2-spider").click(function() {
-            spiderclick();
+            console.log(venue);
+            makeModal(venue.name,undefined,venue)
+        });
+        $("#EP2-bug").click(function() {
+             $.getJSON(link, function(data) {
+                makeModal(venue.name,undefined,data,link)
+            });
+
         });
     }
 
@@ -1848,11 +1834,11 @@
     }
 
     /*
-Copyright (c) 2011 Andrei Mackenzie
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-*/
+    Copyright (c) 2011 Andrei Mackenzie
+    Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+    The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+    */
     // Compute the edit distance between the two given strings
     function getEditDistance (a, b){
         if(a.length == 0) return b.length;
