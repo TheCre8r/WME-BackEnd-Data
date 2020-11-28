@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME BackEnd Data
 // @namespace    https://github.com/thecre8r/
-// @version      2020.11.24.02
+// @version      2020.11.27.01
 // @description  Shows Hidden Attributes, AdPins, and Gas Prices for Applicable Places
 // @include      https://www.waze.com/editor*
 // @include      https://www.waze.com/*/editor*
@@ -14,6 +14,7 @@
 // @require      https://greasyfork.org/scripts/24851-wazewrap/code/WazeWrap.js
 // @require      https://greasyfork.org/scripts/373256-qrcode-js/code/QRCode-Js.js?version=636795
 // @require      https://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js
+// @require      https://www.cssscript.com/demo/minimal-json-data-formatter-jsonviewer/json-viewer.js
 // @license      GPLv3
 // @connect      gapi.waze.com
 // @grant        GM_xmlhttpRequest
@@ -30,15 +31,14 @@
 /* global require */
 /* global QRCode */
 /* global Backbone */
-/* global Flatted */
 
 (function() {
     'use strict';
     const STORE_NAME = "WMEBED_Settings";
     const SCRIPT_NAME = GM_info.script.name;
     const SCRIPT_VERSION = GM_info.script.version.toString();
-    const SCRIPT_CHANGES = `Refactor and added debug tools.`
-    const UPDATE_ALERT = false;
+    const SCRIPT_CHANGES = `<b>Major Gas Price rewrite.</b><br>Gas stations should be live in all countries now!<br>If you speak a foreign language, please let me know! I would like help with the translations.`
+    const UPDATE_ALERT = true;
     const USER = {name: null, rank:null};
     const SERVER = {name: null};
     const COUNTRY = {id: 0, name: null};
@@ -57,7 +57,9 @@
     };
 
     function log(msg) {
-        console.log('WMEBED: ', msg);
+        if (_settings.Debug == true) {
+            console.log('WMEBED: ', msg);
+        }
     }
 
     function installIcon() {
@@ -124,7 +126,7 @@
             else if (getUrlParameter('p2') == 'true') {
                 document.querySelector('#misplaced_ad_pins > div:nth-child(9) > fieldset > div:nth-child(3) > label > label').click()
             }
-
+            $("#misplaced_ad_pins > div:nth-child(16) > fieldset > div:nth-child(3) > label > label > div.material-radio__circle").click()
             let addressLabel;
             let addressID = document.getElementsByName('pin_address')[0].id;
             for (let i=0;i<document.getElementsByTagName('label').length;i++) {
@@ -192,7 +194,7 @@
                     getAds(get4326CenterPoint(),venue)
                 }
             }
-            WazeWrap.Alerts.prompt(GM_info.script.name, "Please enter the name of the requested ads", "", function(e, value){RequestName(e,value)});
+            WazeWrap.Alerts.prompt(GM_info.script.name, I18n.t(`wmebed.popup_request`), "", function(e, value){RequestName(e,value)});
             setTimeout(function(){
                 $("#toast-container-wazedev > div > div:nth-child(4) > input").focus()
             },10);
@@ -275,12 +277,14 @@
         let styleElements = getWmeStyles();
         let css = [
             // formatting
-            '.EP2-link{cursor: context-menu;background-color:#fff;box-shadow:rgba(0,0,0,.1) 0 2px 7.88px 0;box-sizing:border-box;color:#354148;height:30px;line-height:30px;text-decoration:none;text-size-adjust:100%;transition-delay:0s;transition-duration:.25s;transition-property:all;transition-timing-function:ease-in;width:auto;-webkit-tap-highlight-color:transparent;border-color:#354148;border-radius:8px;border-style:none;border-width:0;padding:5px 15px}',
-            '.EP2-link:hover {text-decoration:none;}',
+            '.EP2-items {}',
+            '.EP2-link {height:26px; text-decoration:none cursor: context-menu;background-color:#fff;box-shadow:rgba(0,0,0,.1) 0 2px 7.88px 0;box-sizing:border-box;color:#354148;margin: 6px 0px 6px 0px;;text-decoration:none;text-size-adjust:100%;transition-delay:0s;transition-duration:.25s;transition-property:all;transition-timing-function:ease-in;width:85%;-webkit-tap-highlight-color:transparent;border-color:#354148;border-radius:8px;border-style:none;border-width:0;padding:5px 15px}',
+            '.EP2-link a{text-decoration:none;}',
+            '.EP2-link a:hover {text-decoration:none;}',
             '.EP2-img {padding-right: 6px;position: relative; top: -3px;}',
             '.EP2-img-fa {font-size:11px}',
             '.EP2-icon {color: #8c8c8c;margin-left: 4px;}',
-            '#EP2-spider {cursor:pointer;}',
+            '.EP2-clickable {cursor:pointer;}',
             '#WMEBED-header {margin-bottom:10px;}',
             '#WMEBED-title {font-size:15px;font-weight:600;}',
             '#WMEBED-version {font-size:11px;margin-left:10px;color:#aaa;}',
@@ -293,8 +297,10 @@
             '#appLinkQRCode > img {display: block;margin: auto;border: 10px solid #FFFFFF;border-radius: 10px;}',
             '.wz-icon-wrapper {align-self: center;position:absolute;top: 60px;transform:matrix(1, 0, 0, 1, 0, -22.5);}',
             '.wz-icon {background-image: url(https://www.waze.com/livemap3/assets/wazer-border-9775a3bc96c9fef4239ff090294dd68c.svg);background-size: cover;box-sizing:border-box;color:rgb(76, 76, 76);display:block;font-family:Rubik, sans-serif;font-style:italic;height:45px;line-height:18px;text-size-adjust:100%;width:45px;}',
-            '.gas-price {text-align:center;cursor:default;background-attachment:scroll;background-clip:border-box;background-color:rgb(255, 255, 255);background-image:none;background-origin:padding-box;background-position-x:0%;background-position-y:0%;background-repeat-x:;background-repeat-y:;background-size:auto;border-bottom-color:rgb(61, 61, 61);border-bottom-left-radius:8px;border-bottom-right-radius:8px;border-bottom-style:none;border-bottom-width:0px;border-image-outset:0px;border-image-repeat:stretch;border-image-slice:100%;border-image-source:none;border-image-width:1;border-left-color:rgb(61, 61, 61);border-left-style:none;border-left-width:0px;border-right-color:rgb(61, 61, 61);border-right-style:none;border-right-width:0px;border-top-color:rgb(61, 61, 61);border-top-left-radius:8px;border-top-right-radius:8px;border-top-style:none;border-top-width:0px;box-shadow:rgba(0, 0, 0, 0.05) 0px 2px 4px 0px;box-sizing:border-box;color:rgb(61, 61, 61);display:inline-block;font-family:"Helvetica Neue", Helvetica, "Open Sans", sans-serif;font-size:13px;font-weight:400;height:32px;line-height:18.5714px;padding-bottom:7px;padding-left:10px;padding-right:10px;padding-top:7px;text-size-adjust:100%;width:60px;-webkit-tap-highlight-color:rgba(0, 0, 0, 0)}',
-            '.fa{font-family:"FontAwesome","Font Awesome 5 Free"}',
+            '.gas-price {margin: 0px 5px 0px 5px;text-align:center;cursor:default;background-attachment:scroll;background-clip:border-box;background-color:rgb(255, 255, 255);background-image:none;background-origin:padding-box;background-position-x:0%;background-position-y:0%;background-repeat-x:;background-repeat-y:;background-size:auto;border-bottom-color:rgb(61, 61, 61);border-bottom-left-radius:8px;border-bottom-right-radius:8px;border-bottom-style:none;border-bottom-width:0px;border-image-outset:0px;border-image-repeat:stretch;border-image-slice:100%;border-image-source:none;border-image-width:1;border-left-color:rgb(61, 61, 61);border-left-style:none;border-left-width:0px;border-right-color:rgb(61, 61, 61);border-right-style:none;border-right-width:0px;border-top-color:rgb(61, 61, 61);border-top-left-radius:8px;border-top-right-radius:8px;border-top-style:none;border-top-width:0px;box-shadow:rgba(0, 0, 0, 0.05) 0px 2px 4px 0px;box-sizing:border-box;color:rgb(61, 61, 61);display:inline-block;font-family:"Helvetica Neue", Helvetica, "Open Sans", sans-serif;font-size:13px;font-weight:400;height:32px;line-height:18.5714px;padding-bottom:7px;padding-top:7px;text-size-adjust:100%;width:60px;-webkit-tap-highlight-color:rgba(0, 0, 0, 0)}',
+            '.gas-price-block {display: inline-block}',
+            '.gas-price-text {display:block;text-align: center;font-weight: bold;font-size: 10px}',
+            '.fa, .fas{font-family:"FontAwesome"}',
             '.fab{font-family:"Font Awesome 5 Brands"}',
             '@font-face{font-family:"Font Awesome 5 Free";font-style:normal;font-weight:400;src:url(https://use.fontawesome.com/releases/v5.6.1/webfonts/fa-regular-400.eot);src:url(https://use.fontawesome.com/releases/v5.6.1/webfonts/fa-regular-400.eot?#iefix) format("embedded-opentype"),url(https://use.fontawesome.com/releases/v5.6.1/webfonts/fa-regular-400.woff2) format("woff2"),url(https://use.fontawesome.com/releases/v5.6.1/webfonts/fa-regular-400.woff) format("woff"),url(https://use.fontawesome.com/releases/v5.6.1/webfonts/fa-regular-400.ttf) format("truetype"),url(https://use.fontawesome.com/releases/v5.6.1/webfonts/fa-regular-400.svg#fontawesome) format("svg")}',
             '.far{font-weight:400}',
@@ -303,11 +309,26 @@
             '.fas{font-weight:900}',
             '.WMEBED-icon-link-venue { opacity:0.5; margin-left:0px;margin-right:5px;position:relative;top:3px;' + styleElements.resultTypeVenueStyle + '}',
             '.WMEBED-icon-link-parking { filter:invert(.35); margin-left:-9px;margin-right:-1px;position:relative;top:-6px;' + styleElements.resultTypeParking + '}',
-            '.adpin-background {pointer-events: none;}'
+            '.adpin-background {pointer-events: none;}',
+            '.json-viewer {height: 420px; color: #000;padding-left: 20px;}',
+            '.json-viewer ul {list-style-type: none;margin: 0;margin: 0 0 0 1px;border-left: 1px dotted #ccc;padding-left: 2em;}',
+            '.json-viewer .hide {display: none;}',
+            '.json-viewer ul li .type-string,.json-viewer ul li .type-date {color: #0B7500;}',
+            '.json-viewer ul li .type-boolean {color: #1A01CC;font-weight: bold;}',
+            '.json-viewer ul li .type-number {color: #1A01CC;}',
+            '.json-viewer ul li .type-null {color: red;}',
+            '.json-viewer a.list-link {color: #000;text-decoration: none;position: relative;}',
+            `.json-viewer a.list-link:before {color: #aaa;content: "\\25BC";position: absolute;display: inline-block;width: 1em;left: -1em;}`,
+            '.json-viewer a.list-link.collapsed:before {content: "\\25B6";}',
+            '.json-viewer a.list-link.empty:before {content: "";}',
+            '.json-viewer .items-ph {color: #aaa;padding: 0 1em;}',
+            '.json-viewer .items-ph:hover {text-decoration: underline;}'
+
         ].join(' ');
         $('<style type="text/css">' + css + '</style>').appendTo('head');
-        $('<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.3/css/brands.css" integrity="sha384-1KLgFVb/gHrlDGLFPgMbeedi6tQBLcWvyNUN+YKXbD7ZFbjX6BLpMDf0PJ32XJfX" crossorigin="anonymous">').appendTo('head');
-        $('<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.3/css/fontawesome.css" integrity="sha384-jLuaxTTBR42U2qJ/pm4JRouHkEDHkVqH0T1nyQXn1mZ7Snycpf6Rl25VBNthU4z0" crossorigin="anonymous">').appendTo('head');
+        $('<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.1/css/regular.css" integrity="sha384-APzfePYec2VC7jyJSpgbPrqGZ365g49SgeW+7abV1GaUnDwW7dQIYFc+EuAuIx0c" crossorigin="anonymous">').appendTo('head');
+        $('<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.1/css/brands.css" integrity="sha384-/feuykTegPRR7MxelAQ+2VUMibQwKyO6okSsWiblZAJhUSTF9QAVR0QLk6YwNURa" crossorigin="anonymous">').appendTo('head');
+        $('<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.1/css/fontawesome.css" integrity="sha384-ijEtygNrZDKunAWYDdV3wAZWvTHSrGhdUfImfngIba35nhQ03lSNgfTJAKaGFjk2" crossorigin="anonymous">').appendTo('head');
         log("CSS Injected");
     }
         function injectCssGoogle() {
@@ -321,6 +342,59 @@
         ].join(' ');
         $('<style type="text/css">' + css + '</style>').appendTo('head');
         log("CSS Injected");
+    }
+
+    function initializei18n() {
+        var translations = {
+            en: {
+                tab_title: `${SCRIPT_NAME}`,
+                settings_1: 'Enable Debug Mode',
+                settings_2: 'Open Ad tab when Linked Ad Pin is selected',
+                settings_3: 'Show Pop-Up when ads are searched',
+                settings_4: 'Center Ad Pin On Click',
+                search_for_ads: 'Search for Ads',
+                by_name: 'By Name',
+                on_screen: 'On Screen',
+                clear_ad_pins: 'Clear Ad Pin',
+                report_an_issue: 'Report an Issue on GitHub',
+                help: 'Help',
+                gas_prices: 'Gas Prices',
+                popup_request: 'Please enter the name of the requested ads',
+                gas: {
+                    regular: 'Regular',
+                    regularself: 'Regular (Self)',
+                    diesel: 'Diesel',
+                    midgrade: 'Midgrade',
+                    premium: 'Premium',
+                    lpg: 'LPG',
+                    gpl: 'LPG'
+                },
+                areas: {
+                    US: 'United States'
+                },
+                update: {
+                    message: '',
+                    v0_0_0_0: ''
+                }
+            }
+        };
+        translations['en-GB'] = translations['en-US'] = translations.en;
+        I18n.translations[I18n.currentLocale()].wmebed = translations.en;
+        Object.keys(translations).forEach(function(locale) {
+            if (I18n.currentLocale() == locale) {
+                addFallbacks(translations[locale], translations.en);
+                I18n.translations[locale].wmebed = translations[locale];
+            }
+        });
+        function addFallbacks(localeStrings, fallbackStrings) {
+            Object.keys(fallbackStrings).forEach(function(key) {
+                if (!localeStrings[key]) {
+                    localeStrings[key] = fallbackStrings[key];
+                } else if (typeof localeStrings[key] === 'object') {
+                    addFallbacks(localeStrings[key], fallbackStrings[key]);
+                }
+            });
+        }
     }
 
     function getWmeStyles() {
@@ -371,6 +445,7 @@
 
     let TESTERS = ["The_Cre8r","jm6087","DCLemur","Larryhayes7","steelpanz","subs5","Joyriding","santyg2001","hiroaki27609","ABelter"];
     function initTab() {
+
         let $section = $("<div>");
         USER.name = W.loginManager.user.userName.toString();
         USER.rank = W.loginManager.user.rank + 1;
@@ -380,36 +455,36 @@
             COUNTRY.name = W.model.countries.getObjectById(COUNTRY.id).name;
         }
         function UserTest() {
-            return (TESTERS.indexOf(USER.name) > -1 ? `<div class="controls-container"><input type="checkbox" id="WMEBED-Debug" value="on"><label for="WMEBED-Debug">Enable Debug Link</label></div>` : '');
+            return (TESTERS.indexOf(USER.name) > -1 ? `<div class="controls-container"><input type="checkbox" id="WMEBED-Debug" value="on"><label for="WMEBED-Debug">${I18n.t(`wmebed.settings_1`)}</label></div>` : '');
         }
         $section.html([
             '<div>',
                 '<div id="WMEBED-header">',
-                    `<span id="WMEBED-title">${SCRIPT_NAME}</span>`,
+                    `<span id="WMEBED-title">${I18n.t(`wmebed.tab_title`)}</span>`,
                     `<span id="WMEBED-version">${SCRIPT_VERSION}</span>`,
                 '</div>',
                 '<form class="attributes-form side-panel-section">',
                     '<div class="form-group">',
                         UserTest(),
                         '<div class="controls-container">',
-                            '<input type="checkbox" id="WMEBED-AutoSelectAdTab" value="on"><label for="WMEBED-AutoSelectAdTab">Open Ad tab when Linked Ad Pin is selected</label>',
+                            `<input type="checkbox" id="WMEBED-AutoSelectAdTab" value="on"><label for="WMEBED-AutoSelectAdTab">${I18n.t(`wmebed.settings_2`)}</label>`,
                         '</div>',
                         '<div class="controls-container">',
-                            '<input type="checkbox" id="WMEBED-ShowRequestPopUp" value="on"><label for="WMEBED-ShowRequestPopUp">Show Pop-Up when ads are searched</label>',
+                            `<input type="checkbox" id="WMEBED-ShowRequestPopUp" value="on"><label for="WMEBED-ShowRequestPopUp">${I18n.t(`wmebed.settings_3`)}</label>`,
                         '</div>',
                         '<div class="controls-container">',
-                                '<input type="checkbox" id="WMEBED-PanOnClick" value="on"><label for="WMEBED-PanOnClick">Center Ad Pin On Click</label>',
+                                `<input type="checkbox" id="WMEBED-PanOnClick" value="on"><label for="WMEBED-PanOnClick">${I18n.t(`wmebed.settings_4`)}</label>`,
                             '</div>',
                         '</div>',
                         '<div class="form-group">',
-                            '<label class="control-label">Search for Ads</label>',
+                            `<label class="control-label">${I18n.t(`wmebed.search_for_ads`)}</label>`,
                         '<div>',
-                            '<input type="button" id="WMEBED-Button-Name" value="By Name" class="btn btn-primary WMEBED-Button">',
-                            '<input type="button" id="WMEBED-Button-Screen" title="Available to R5+" value="On Screen" class="btn btn-primary WMEBED-Button" disabled>',
+                            `<input type="button" id="WMEBED-Button-Name" value="${I18n.t(`wmebed.by_name`)}" class="btn btn-primary WMEBED-Button">`,
+                            `<input type="button" id="WMEBED-Button-Screen" title="Available to R5+" value="${I18n.t(`wmebed.on_screen`)}" class="btn btn-primary WMEBED-Button" disabled>`,
                         '</div>',
                     '</div>',
                     '<div class="form-group">',
-                        '<label class="control-label">Clear Ad Pins</label>',
+                        `<label class="control-label">${I18n.t(`wmebed.clear_ad_pins`)}</label>`,
                         '<div>',
                             '<input type="button" style="font-family:Font Awesome\\ 5 Free; margin-left:5px;" id="WMEBED-Button-Trash" title="Trash" value="" class="btn btn-danger WMEBED-Button">',
                         '</div>',
@@ -418,20 +493,20 @@
                         '<div class="WMEBED-report">',
                             '<i class="fab fa-github" style="font-size: 13px; padding-right:5px"></i>',
                             '<div style="display: inline-block;">',
-                                '<a target="_blank" href="https://github.com/TheCre8r/WME-BackEnd-Data/issues/new" id="WMEBED-report-an-issue">Report an Issue on GitHub</a>',
+                                `<a target="_blank" href="https://github.com/TheCre8r/WME-BackEnd-Data/issues/new" id="WMEBED-report-an-issue">${I18n.t(`wmebed.report_an_issue`)}</a>`,
                             '</div>',
                         '</div>',
                         `<div class="WMEBED-help" style="text-align: center;padding-top: 5px;">`,
                             `<i class="far fa-question-circle" style="font-size: 13px; padding-right:5px"></i>`,
                             `<div style="display: inline-block;">`,
-                                `<a target="_blank" href="https://github.com/TheCre8r/WME-BackEnd-Data/wiki" id="WMEBED-help-link">Help</a>`,
+                                `<a target="_blank" href="https://github.com/TheCre8r/WME-BackEnd-Data/wiki" id="WMEBED-help-link">${I18n.t(`wmebed.help`)}</a>`,
                             `</div>`,
                         `</div>`,
                     '</div>',
                 '</form>',
             '</div>'
         ].join(' '));
-        new WazeWrap.Interface.Tab('WMEBED', $section.html(), init);
+        new WazeWrap.Interface.Tab('WMEBED', $section.html(), initLayer);
         $('a[href$="#sidepanel-wmebed"]').html(`<span class="fas fa-bed"></span>`)
         $('a[href$="#sidepanel-wmebed"]').prop('title', 'WME BED');
         $("#WMEBED-Button-Name").click({source: "popup"},requestAds);
@@ -487,7 +562,9 @@
 
     function initializeSettings() {
         loadSettings();
-        WazeWrap.Interface.ShowScriptUpdate(SCRIPT_NAME, SCRIPT_VERSION, SCRIPT_CHANGES,`" </a><a target="_blank" href='https://github.com/TheCre8r/WME-BackEnd-Data'>GitHub</a><a style="display:none;" href="`, "https://www.waze.com/forum/viewtopic.php?f=819&t=273811");
+        if (UPDATE_ALERT == true){
+            WazeWrap.Interface.ShowScriptUpdate(SCRIPT_NAME, SCRIPT_VERSION, SCRIPT_CHANGES,`"</a><a target="_blank" href='https://github.com/TheCre8r/WME-BackEnd-Data'>GitHub</a><a style="display:none;" href="`, "https://www.waze.com/forum/viewtopic.php?f=819&t=273811");
+        }
         setChecked('Debug', _settings.Debug);
         setChecked('AutoSelectAdTab', _settings.AutoSelectAdTab);
         setChecked('ShowRequestPopUp', _settings.ShowRequestPopUp);
@@ -589,26 +666,10 @@
         }
     }
 */
-function JSONStringify(object) {
-    var cache = [];
-    var str = JSON.stringify(object,
-        // custom replacer fxn - gets around "TypeError: Converting circular structure to JSON"
-        function(key, value) {
-            if (typeof value === 'object' && value !== null) {
-                if (cache.indexOf(value) !== -1) {
-                    // Circular reference found, discard key
-                    return;
-                }
-                // Store value in our collection
-                cache.push(value);
-            }
-            return value;
-        }, 4);
-    cache = null; // enable garbage collection
-    return str;
-};
+
     function makeModal(title,htmlstring,json,link) {
         let string;
+        var jsonViewer = new JSONViewer();
         if (htmlstring === undefined && json) {
         htmlstring =
             `<div class="modal-dialog">`+
@@ -621,9 +682,8 @@ function JSONStringify(object) {
                             `<div class="venue-name">${title}</div>`+
                         `</div>`+
                         `<div class="modal-body">`+
-                            `<div style="white-space: pre;height: 420px; overflow-y: scroll; background-color:#f9f2f4;"><code>`+
-                            `${JSONStringify(json)}`+
-                            `</div></code>`+
+                            `<div id="json">`+
+                            `</div>`+
                             `<div class="details">`+
                                 //`<div class="date small"><strong>Added on </strong>November 07, 2020 </div>`+
                                 `<div class="user small"><strong>Source: </strong><a target="_blank" ${string = link === undefined ? "WME" : 'href="'+link+'"'}" rel="noopener noreferrer">${link = link === undefined ? "WME" : "Search Server"}</a></div>`+
@@ -635,6 +695,8 @@ function JSONStringify(object) {
             `</div>`
         }
         $("#dialog-region").append( htmlstring );
+        document.querySelector("#json").appendChild(jsonViewer.getContainer());
+        jsonViewer.showJSON(json, 10, -1);//Spider Bug https://www.cssscript.com/minimal-json-data-formatter-jsonviewer/
         $("body").addClass("modal-open")
         $("#dialog-region").addClass("in")
         $("#dialog-region").css({'display': 'block', 'padding-left': '17px'});
@@ -789,80 +851,6 @@ function JSONStringify(object) {
                 hi(ad_data,marker) //adds ad tab to sidebar if marker already exists
             }
             log(`Ad Already Created`)
-        }
-    }
-    function getgasprice(link,type){
-        //type = "gas.premium";
-        //one day add <sup style="top:-0.3em;">9</sup> for the last nine
-        if (link.toString().indexOf("venues.-") >= 0) {
-            log("No Gas Prices since there is no venue")
-            return `N/A`;
-        }
-        else {
-            $.getJSON(link,function(data) {
-                if (data.venue.changed_products){
-                    let changed_products = data.venue.changed_products.filter(function(i){return i.key == type;})[0];
-                    let cost = (changed_products && changed_products.value.price) ? data.venue.currency[0].toString()+String.fromCharCode(160)+changed_products.value.price : "N/A";
-                    type = type.replace(/\./,'-').toString();
-                    $('#'+type).text(cost);
-                } else if (data.venue.product) {
-                    let product = data.venue.product.filter(function(i){return i.id == type;})[0];
-                    let cost = (product && product.price) ? data.venue.currency[0].toString()+String.fromCharCode(160)+product.price : "N/A";
-                    type = type.replace(/\./,'-').toString();
-                    $('#'+type).text(cost);
-                } else {
-                    type = type.replace(/\./,'-').toString();
-                    $('#'+type).text("N/A");
-                }
-            });
-        }
-    }
-
-    function getlastupdate(link){
-        let date;
-        let user;
-        let userid;
-        if (link.toString().indexOf("venues.-") >= 0) {
-            log("No gas update time since there is no venue")
-            return `Why would you even think there are gas prices yet? You haven't even saved the place yet. - <a target="_blank" href="https://www.waze.com/user/editor/jm6087">jm6087</a>`;
-        }
-        else {
-            $.getJSON(link,function(data) {
-                if (data.venue.changed_products) {
-                    if (data.venue.changed_products.filter(function(i){return i.key == "gas.regular";})[0]) {
-                        date = data.venue.changed_products.filter(function(i){return i.key == "gas.regular";})[0].value.updateTime;
-                        user = data.venue.changed_products.filter(function(i){return i.key == "gas.regular";})[0].value.userName;
-                        userid = data.venue.changed_products.filter(function(i){return i.key == "gas.regular";})[0].value.userId;
-                    } else {
-                        date = data.venue.changed_products.filter(function(i){return i.key == "gas.95";})[0].value.updateTime;
-                        user = data.venue.changed_products.filter(function(i){return i.key == "gas.95";})[0].value.userName;
-                        userid = data.venue.changed_products.filter(function(i){return i.key == "gas.95";})[0].value.userId;
-                    }
-                    date = timeConverter(date);
-                    if (user && date){
-                        $('#gas-update-time').html(`Updated: ${date} by <a target="_blank" href="https://www.waze.com/user/editor/${user}">${user}</a>`);
-                    } else {
-                        $('#gas-update-time').html(`Updated: ${date} by ${userid} </a>`);
-                    }
-                } else if (data.venue.product) {
-                    if (data.venue.changed_products.filter(function(i){return i.key == "gas.regular";})[0]) {
-                        date = data.venue.product.filter(function(i){return i.id == "gas.regular";})[0].last_updated;
-                        user = data.venue.product.filter(function(i){return i.id == "gas.regular";})[0].updated_by;
-                    } else {
-                        date = data.venue.product.filter(function(i){return i.id == "gas.95";})[0].last_updated;
-                        user = data.venue.product.filter(function(i){return i.id == "gas.95";})[0].updated_by;
-                    }
-                    date = timeConverter(date);
-                    //log (date)
-                    if (user && date){
-                        $('#gas-update-time').html(`Updated: ${date} by <a target="_blank" href="https://www.waze.com/user/editor/${user}">${user}</a>`);
-                    } else {
-                        $('#gas-update-time').html(`Updated: ${date} by Unknown User </a>`);
-                    }
-                } else {
-                    $('#gas-update-time').html(`Updated: Never</a>`);
-                }
-            });
         }
     }
 
@@ -1517,262 +1505,234 @@ function JSONStringify(object) {
 
         return addressDetails;
     }
-
-    function insertExternalProviders2(){
+    async function gasprices(tempjson){
         let latlon = get4326CenterPoint();
         let venue = W.selectionManager.getSelectedFeatures()[0].model.attributes;
         let link = `https://${window.location.hostname + W.Config.search.server}?lon=${latlon.lon}&lat=${latlon.lat}&format=PROTO_JSON_FULL&venue_id=venues.${venue.id}`;
+        if(W.selectionManager.getSelectedFeatures()[0].model.type === "venue") {
+            if (venue.id <= 0 && W.selectionManager.getSelectedFeatures()[0].model.attributes.categories.indexOf("GAS_STATION") >= 0){
+                $('.tabs-container ul').append('<li><a data-toggle="tab" id="gas-tab" href="#venue-gas"><span class="fas fa-gas-pump"></span></a></li>');
+
+                let htmlstring =
+                    //$.getJSON("https://www.waze.com/SearchServer/mozi?lon=-78.40874&lat=36.26622&format=PROTO_JSON_FULL&venue_id=venues.184549739.1845431851.509601",function(data) {console.log (data.venue.product[0].id);})
+                    `<div class="gas tab-pane" id="venue-gas">`+
+                    `<form class="attributes-form">`+
+                    `<div class="side-panel-section">`+
+                    `<div class="form-group">`+
+                    `<label class="control-label">${I18n.t(`wmebed.gas_prices`)}</label>`+
+                    `<div id="gas-prices" style="text-align:center">`+
+                    `</div>`+
+                    `</div>`+
+                    `<ul class="additional-attributes list-unstyled side-panel-section">`+
+                    `<li id="gas-update-time">Why would you even think there are gas prices yet? You haven't even saved the place yet. - <a target="_blank" href="https://www.waze.com/user/editor/jm6087">jm6087</a></li>`+
+                    `</ul>`+
+                    `<div class="WMEBED-report">`+
+                    `<i class="fab fa-github" style="font-size: 13px; padding-right:5px"></i>`+
+                    `<div style="display: inline-block">`+
+                    `<a id="WMEBED-report-an-issue-gas">${I18n.t(`wmebed.report_an_issue`)}</a>`+
+                    `</div>`+
+                    `</div>`+
+                    `</div>`+
+                    `</form>`+
+                    `</div>`;
+                $(document.querySelector('#edit-panel > div > div > div > div.tab-content')).append(htmlstring);
+            } else if (W.selectionManager.getSelectedFeatures()[0].model.attributes.categories.indexOf("GAS_STATION") >= 0){
+                console.log(tempjson);
+
+                let price_unit = tempjson.price_unit; // $
+
+                let updatetimes = []
+                for ( let i = 0; i < tempjson.venue.product.length; i++) {
+                    updatetimes.push(tempjson.venue.product[i].last_updated)
+                }
+                let lastupdate = Math.max(...updatetimes)
+                let lastupdatestring = timeConverter(lastupdate); // October 20, 2020 11:38
+
+                let lastupdateduser;
+                for (var i = 0; i < tempjson.venue.product.length; i++){
+                    if (tempjson.venue.product[i].last_updated == lastupdate){
+                        lastupdateduser = tempjson.venue.product[i].updated_by;
+                        i=tempjson.venue.product.length
+                    }
+                }
+
+
+
+                function GetUpdateString() {
+                    if (lastupdatestring && lastupdateduser){
+                        if (lastupdateduser == "3rd Party") {
+                            $('#gas-update-time').html(`${I18n.t('edit.updated_on', {time: lastupdatestring})} 3rd Party`)
+                        } else {
+                            $('#gas-update-time').html(`${I18n.t('edit.updated_on', {time: lastupdatestring})} <a target="_blank" href="https://www.waze.com/user/editor/${lastupdateduser}">${lastupdateduser}</a>`);
+                        }
+                    } else {
+                        $('#gas-update-time').html(`${I18n.t('edit.updated_on', {time: lastupdatestring})} by Unknown User </a>`);
+                    }
+                }
+
+
+                function getgasprice(tempjson){
+                    //type = "gas.premium";
+                    //one day add <sup style="top:-0.3em;">9</sup> for the last nine
+
+
+                    if (link.toString().indexOf("venues.-") >= 0) {
+                        log("No Gas Prices since there is no venue")
+                        return `N/A`;
+                    }
+                    else {
+                        let gastypes = []
+                        for (let i = 0; i < tempjson.venue.product.length; i++) {
+                            if (tempjson.venue.product[i].id.includes("gas.")) {
+                                gastypes.push(tempjson.venue.product[i].id) //$("#gas-prices > div:nth-child(1) > div").html()
+                                let type = tempjson.venue.product[i].id; // gas.premium
+                                let price = tempjson.venue.product[i].price //1.999
+                                let pricestring
+                                if (price.toString().includes('.') && price.toString().split('.')[1].length == 3) {
+                                    pricestring = tempjson.venue.currency[0].toString()+String.fromCharCode(160)+price.toString().substring(0, price.toString().length-1)+`<sup style="top:-0.3em;">`+price.toString().substring(price.toString().length-1, price.toString().length)+`</sup>`;
+                                } else {
+                                    pricestring = tempjson.venue.currency[0].toString()+String.fromCharCode(160)+price
+                                }
+                                let htmlstring =
+                                    `<div class="gas-price-block" id="${tempjson.venue.product[i].id}">`+
+                                    `<div class="gas-price">${pricestring}</div>`+
+                                    `<span class="gas-price-text">${I18n.t(`wmebed.${type}`)}</span>`+
+                                    `</div>`;
+                                console.log(`${I18n.t(`wmebed.${type}`)}`)
+                                console.log(`${type}`)
+                                $( "#gas-prices" ).append(htmlstring);
+                            }
+                        }
+                    }
+                    //Sorter
+                    log("Country: " + COUNTRY.name)
+                    if (COUNTRY.name == "United States") {
+                        $("#gas\\.regular").appendTo( "#gas-prices" );
+                        $("#gas\\.midgrade").appendTo( "#gas-prices" );
+                        $("#gas\\.premium").appendTo( "#gas-prices" );
+                        $("#gas\\.diesel").appendTo( "#gas-prices" );
+                    } else if (COUNTRY.name == "Mexico") {
+                        $("#gas\\.magna").appendTo( "#gas-prices" );
+                        $("#gas\\.premium").appendTo( "#gas-prices" );
+                        $("#gas\\.diesel").appendTo( "#gas-prices" );
+                    }
+                }
+
+                $('.tabs-container ul').append('<li><a data-toggle="tab" id="gas-tab" href="#venue-gas"><span class="fas fa-gas-pump"></span></a></li>');
+
+                let htmlstring =
+                    //$.getJSON("https://www.waze.com/SearchServer/mozi?lon=-78.40874&lat=36.26622&format=PROTO_JSON_FULL&venue_id=venues.184549739.1845431851.509601",function(data) {console.log (data.venue.product[0].id);})
+                    `<div class="gas tab-pane" id="venue-gas">`+
+                    `<form class="attributes-form">`+
+                    `<div class="side-panel-section">`+
+                    `<div class="form-group">`+
+                    `<label class="control-label">Gas Prices</label>`+
+                    `<div id="gas-prices" style="text-align:center">`+
+                    `</div>`+
+                    `</div>`+
+                    `<ul class="additional-attributes list-unstyled side-panel-section">`+
+                    `<li id="gas-update-time"></li>`+
+                    `</ul>`+
+                    `<div class="WMEBED-report">`+
+                    `<i class="fab fa-github" style="font-size: 13px; padding-right:5px"></i>`+
+                    `<div style="display: inline-block">`+
+                    `<a id="WMEBED-report-an-issue-gas">${I18n.t(`wmebed.report_an_issue`)}</a>`+
+                    `</div>`+
+                    `</div>`+
+                    `</div>`+
+                    `</form>`+
+                    `</div>`;
+
+                $(document.querySelector('#edit-panel > div > div > div > div.tab-content')).append(htmlstring);
+                GetUpdateString()
+                getgasprice(tempjson)
+            }
+        }
+        $('#WMEBED-report-an-issue-gas').click(function(){ //line 570
+            if (confirm(`Reminder:\nGas prices can't be updated in WME.\nPlease do not report incorrect gas prices.`)){
+                window.open(
+                    `https://github.com/TheCre8r/WME-BackEnd-Data/issues/new?title=Missing%20Gas%20Prices&body=${encodeURIComponent("Permalink: "+$(".WazeControlPermalink .permalink").attr('href').toString())}`,
+                    '_blank' //New window
+                );
+            }
+        });
+    }
+
+    async function insertExternalProviders2(){
+        if ($("#ExternalProviders2").length) {
+            return
+        }
+        let latlon = get4326CenterPoint();
+        let venue = W.selectionManager.getSelectedFeatures()[0].model.attributes;
+        let link = `https://${window.location.hostname + W.Config.search.server}?lon=${latlon.lon}&lat=${latlon.lat}&format=PROTO_JSON_FULL&venue_id=venues.${venue.id}`;
+        let tempjson;
+        if (venue.id <= 0) {
+        } else {
+            await $.ajax({
+                url: link,
+                type: 'get',
+                dataType: 'json',
+                cache: false,
+                success: function(data) {
+                    tempjson = data;
+                }
+            });
+        }
+
         function DebugCheck() {
-            return (_settings.Debug == true ? `<i class="fas fa-bug EP2-icon" id="EP2-bug" style="color: #8c8c8c;"></i><i id="EP2-spider" class="fas fa-spider EP2-icon" style="color: #8c8c8c;"></i>` :``)
+            return (_settings.Debug == true ? `<i id="EP2-bug" class="fas fa-bug EP2-icon EP2-clickable" style="color: #8c8c8c;"></i><i id="EP2-spider" class="fas fa-spider EP2-icon EP2-clickable" style="color: #8c8c8c;"></i>` :``)
         }
         //<i id="ep2-tooltip" class="EP2-icon waze-tooltip" data-toggle="tooltip" data-original-title="" title=""></i>
         let $EP2 = $(
-            `<div class="form-group" id="ExternalProviders2"><label class="control-label control-label-inline">External Providers (Read Only)</label><i id="ep2-tooltip" class="EP2-icon waze-tooltip"></i>${DebugCheck()}<div id="EP2-items"><div id="EP2-txt"><a class="EP2-link" style="cursor: context-menu;">None</a></div></div></div>`);
-        if(W.selectionManager.getSelectedFeatures()[0].model.type === "venue") {
-            if (W.selectionManager.getSelectedFeatures()[0].model.attributes.categories.indexOf("GAS_STATION") >= 0){
-                getlastupdate(link)
-                $('.tabs-container ul').append('<li><a data-toggle="tab" id="gas-tab" href="#venue-gas"><span class="fas fa-gas-pump"></span></a></li>');
-                if (SERVER.name == "usa") {
-                    $(document.querySelector('#edit-panel > div > div > div > div.tab-content')).append(
-                        `<div class="gas tab-pane" id="venue-gas">`+
-                            `<form class="attributes-form">`+
-                            `<div class="side-panel-section">`+
-                                `<div class="form-group">`+
-                                    `<label class="control-label">Gas Prices</label>`+
-                                        `<div style="text-align:center">`+
-                                            `<div style="display: inline-block;">`+
-                                                `<div class="gas-price" id="gas-regular">${getgasprice(link,"gas.regular")}</div>`+
-                                                `<span class="gas-price-text"style="display: block;text-align: center;font-weight: bold;font-size: 10px;">Regular</span>`+
-                                            `</div>`+
-                                            `<div style="display: inline-block;">`+
-                                                `<div class="gas-price" id="gas-midgrade">${getgasprice(link,"gas.midgrade")}</div>`+
-                                                `<span style="display: block;text-align: center;font-weight: bold;font-size: 10px;">Midgrade</span>`+
-                                            `</div>`+
-                                            `<div style="display: inline-block;">`+
-                                                `<div class="gas-price" id="gas-premium">${getgasprice(link,"gas.premium")}</div>`+
-                                                `<span style="display: block;text-align: center;font-weight: bold;font-size: 10px;">Premium</span>`+
-                                            `</div>`+
-                                            `<div style="display: inline-block;">`+
-                                                `<div class="gas-price" id="gas-diesel">${getgasprice(link,"gas.diesel")}</div>`+
-                                                `<span style="display: block;text-align: center;font-weight: bold;font-size: 10px;">Diesel</span>`+
-                                            `</div>`+
-                                        `</div>`+
-                                    `</div>`+
-                                    `<ul class="additional-attributes list-unstyled side-panel-section">`+
-                                        `<li id="gas-update-time">${getlastupdate(link)}</li>`+
-                                    `</ul>`+
-                                    `<div class="WMEBED-report">`+
-                                        `<i class="fab fa-github" style="font-size: 13px; padding-right:5px"></i>`+
-                                        `<div style="display: inline-block">`+
-                                            `<a id="WMEBED-report-an-issue-gas">Report an Issue on GitHub<</a>`+
-                                        `</div>`+
-                                    `</div>`+
-                                `</div>`+
-                            `</form>`+
-                        `</div>`
-                    );
-                } else if (SERVER.name == "row") {
-                    if (COUNTRY.name == "Italy") {
-	                    $('.venue').find('.tab-content').append(
-	                        `<div class="tab-pane" id="venue-gas">`+
-	                            `<form class="attributes-form">`+
-	                                `<div class="side-panel-section">`+
-	                                    `<div class="form-group">`+
-	                                        `<label class="control-label">Gas Prices</label>`+
-	                                        `<div style="text-align:center">`+
-	                                            `<div style="display: inline-block;">`+
-	                                                `<div class="gas-price" id="gas-regular">${getgasprice(link,"gas.regular")}</div>`+
-	                                                `<span class="gas-price-text"style="display: block;text-align: center;font-weight: bold;font-size: 10px;">Diesel</span>`+
-	                                            `</div>`+
-	                                            `<div style="display: inline-block;">`+
-	                                                `<div class="gas-price" id="gas-diesel">${getgasprice(link,"gas.diesel")}</div>`+
-	                                                `<span style="display: block;text-align: center;font-weight: bold;font-size: 10px;">Benzina</span>`+
-	                                            `</div>`+
-	                                            `<div style="display: inline-block;">`+
-	                                                `<div class="gas-price" id="gas-gpl">${getgasprice(link,"gas.gpl")}</div>`+
-	                                                `<span style="display: block;text-align: center;font-weight: bold;font-size: 10px;">GPL</span>`+
-	                                            `</div>`+
-	                                            `<div style="display: inline-block;">`+
-	                                                `<div class="gas-price" id="gas-gas">${getgasprice(link,"gas.gas")}</div>`+
-	                                                `<span style="display: block;text-align: center;font-weight: bold;font-size: 10px;">Metano</span>`+
-	                                            `</div>`+
-	                                        `</div>`+
-	                                    `</div>`+
-	                                    `<ul class="additional-attributes list-unstyled side-panel-section">`+
-	                                        `<li id="gas-update-time">${getlastupdate(link)}</li>`+
-	                                    `</ul>`+
-	                                   `<div class="WMEBED-report">`+
-	                                       `<i class="fab fa-github" style="font-size: 13px; padding-right:5px"></i>`+
-	                                       `<div style="display: inline-block">`+
-	                                           `<a id="WMEBED-report-an-issue-gas">Report an Issue on GitHub<</a>`+
-	                                       `</div>`+
-	                                   `</div>`+
-	                                `</div>`+
-	                            `</form>`+
-	                        `</div>`
-	                    );
-                    } else {
-	                    $('.venue').find('.tab-content').append(
-	                        `<div class="tab-pane" id="venue-gas">`+
-	                            `<form class="attributes-form">`+
-	                                `<div class="side-panel-section">`+
-	                                    `<div class="form-group">`+
-	                                        `<label class="control-label">Gas Prices</label>`+
-	                                        `<div style="text-align:center">`+
-	                                            `<div style="display: inline-block;">`+
-	                                                `<div class="gas-price" id="gas-95">${getgasprice(link,"gas.95")}</div>`+
-	                                                `<span class="gas-price-text"style="display: block;text-align: center;font-weight: bold;font-size: 10px;">Super 95</span>`+
-	                                            `</div>`+
-	                                            `<div style="display: inline-block;">`+
-	                                                `<div class="gas-price" id="gas-98">${getgasprice(link,"gas.98")}</div>`+
-	                                                `<span style="display: block;text-align: center;font-weight: bold;font-size: 10px;">Super 98</span>`+
-	                                            `</div>`+
-	                                            `<div style="display: inline-block;">`+
-	                                                `<div class="gas-price" id="gas-lpg">${getgasprice(link,"gas.lpg")}</div>`+
-	                                                `<span style="display: block;text-align: center;font-weight: bold;font-size: 10px;">LPG</span>`+
-	                                            `</div>`+
-	                                            `<div style="display: inline-block;">`+
-	                                                `<div class="gas-price" id="gas-diesel">${getgasprice(link,"gas.diesel")}</div>`+
-	                                                `<span style="display: block;text-align: center;font-weight: bold;font-size: 10px;">Diesel</span>`+
-	                                            `</div>`+
-	                                        `</div>`+
-	                                    `</div>`+
-	                                    `<ul class="additional-attributes list-unstyled side-panel-section">`+
-	                                        `<li id="gas-update-time">${getlastupdate(link)}</li>`+
-	                                    `</ul>`+
-	                                   `<div class="WMEBED-report">`+
-	                                       `<i class="fab fa-github" style="font-size: 13px; padding-right:5px"></i>`+
-	                                       `<div style="display: inline-block">`+
-	                                           `<a id="WMEBED-report-an-issue-gas">Report an Issue on GitHub<</a>`+
-	                                       `</div>`+
-	                                   `</div>`+
-	                                `</div>`+
-	                            `</form>`+
-	                        `</div>`
-	                    );
-                    }
-                } else if (SERVER.name == "il") {
-                    $('.venue').find('.tab-content').append(
-                        `<div class="tab-pane" id="venue-gas">`+
-                            `<form class="attributes-form">`+
-                                `<div class="side-panel-section">`+
-                                    `<div class="form-group">`+
-                                        `<label class="control-label">Gas Prices</label>`+
-                                        `<div style="text-align:center">`+
-                                            `<div style="display: inline-block;">`+
-                                                `<div class="gas-price" id="gas-premium">${getgasprice(link,"gas.premium")}</div>`+
-                                                `<span class="gas-price-text"style="display: block;text-align: center;font-weight: bold;font-size: 10px;">Premium</span>`+
-                                            `</div>`+
-                                            `<div style="display: inline-block;">`+
-                                                `<div class="gas-price" id="gas-diesel">${getgasprice(link,"gas.diesel")}</div>`+
-                                                `<span style="display: block;text-align: center;font-weight: bold;font-size: 10px;">Diesel</span>`+
-                                            `</div>`+
-                                            `<div style="display: inline-block;">`+
-                                                `<div class="gas-price" id="gas-regular">${getgasprice(link,"gas.regular")}</div>`+
-                                                `<span style="display: block;text-align: center;font-weight: bold;font-size: 10px;">Regular</span>`+
-                                            `</div>`+
-                                            `<div style="display: inline-block;">`+
-                                                `<div class="gas-price" id="gas-regularself">${getgasprice(link,"gas.regularself")}</div>`+
-                                                `<span style="display: block;text-align: center;font-weight: bold;font-size: 10px;">Regular (Self)</span>`+
-                                            `</div>`+
-                                        `</div>`+
-                                    `</div>`+
-                                    `<ul class="additional-attributes list-unstyled side-panel-section">`+
-                                        `<li id="gas-update-time">${getlastupdate(link)}</li>`+
-                                    `</ul>`+
-                                    `<div class="WMEBED-report">`+
-                                    `<i class="fab fa-github" style="font-size: 13px; padding-right:5px"></i>`+
-                                        `<div style="display: inline-block">`+
-                                            `<a id="WMEBED-report-an-issue-gas">Report an Issue on GitHub</a>`+
-                                        `</div>`+
-                                    `</div>`+
-                                `</div>`+
-                            `</form>`+
-                        `</div>`
-                    );
-                } else {
-                    $('.venue').find('.tab-content').append(
-                        `<div class="tab-pane" id="venue-gas">`+
-                            `<form class="attributes-form">`+
-                                `<div class="side-panel-section">`+
-                                    `<div class="form-group">`+
-                                        `<label class="control-label">Gas Prices</label>`+
-                                        `<div style="text-align:center;padding-top:20px">`+
-                                            `Gas Prices are not available in your area.<br />Press button below to help out!`+
-                                            `<div style="text-align:center;padding-top:20px">`+
-                                                `<i class="fab fa-github" style="font-size: 13px; padding-right:5px"></i>`+
-                                                `<div style="display: inline-block">`+
-                                                    `<a target="_blank" href="https://github.com/TheCre8r/WME-BackEnd-Data/issues/new?title=Missing%20Gas%20Prices&body=${encodeURIComponent("Permalink: "+$(".WazeControlPermalink .permalink").attr('href').toString())}" id="WMEBED-report-an-issue">Report an Issue</a>`+
-                                                `</div>`+
-                                            `</div>`+
-                                        `</div>`+
-                                    `</div>`+
-                                `</div>`+
-                            `</form>`+
-                        `</div>`
-                    );
-                }
-            }
-            $('#WMEBED-report-an-issue-gas').click(function(){ //line 570
-                if (confirm(`Reminder:\nGas prices can't be updated in WME.\nPlease do not report incorrect gas prices.`)){
-                    window.open(
-                        `https://github.com/TheCre8r/WME-BackEnd-Data/issues/new?title=Missing%20Gas%20Prices&body=${encodeURIComponent("Permalink: "+$(".WazeControlPermalink .permalink").attr('href').toString())}`,
-                        '_blank' //New window
-                    );
-                }
-            });
-            let spot = $('#venue-edit-general > form > div').length - 1;
-            $('#venue-edit-general > form > div:nth-child('+spot+')').after($EP2);
-            log("Button Added");
-            getAds(latlon,venue);
-            if (link.toString().indexOf("venues.-") >= 0) {
-                return;
+            `<div class="form-group" id="ExternalProviders2"><label class="control-label control-label-inline">External Providers (Read Only)</label><i id="ep2-tooltip" class="EP2-icon waze-tooltip"></i>${DebugCheck()}<div id="EP2-items"><div class="EP2-link"><a style="cursor: context-menu;">None</a></div></div></div>`);
+
+        gasprices(tempjson);
+
+
+
+        let spot = $('#venue-edit-general > form > div').length - 1;
+        $('#venue-edit-general > form > div:nth-child('+spot+')').after($EP2);
+        log("Button Added");
+
+        getAds(latlon,venue);
+
+        if (venue.id <= 0 || link.toString().indexOf("venues.-") >= 0) {
+            return;
+        } else {
+            if (tempjson.venue.external_providers) {
+                log('JSON External Providers ' + tempjson.venue.external_providers.length)
             } else {
-                $.getJSON(link, function(data) {
-                    if (data.venue.external_providers) {
-                        log('JSON External Providers ' + data.venue.external_providers.length)
+                log('JSON External Providers 0')
+            }
+            let i = 0;
+            let count = 0;
+            while (tempjson.venue.external_providers != undefined && i < tempjson.venue.external_providers.length) {
+                if (tempjson.venue.external_providers[i].provider === "Google") {
+                    log("Google Skipped");
+                } else {
+                    count++;
+                    if (count === 1) {
+                        $("#EP2-items").html(`<div class="EP2-link"><a target="_blank"> ${tempjson.venue.external_providers[i].provider}</a></div>`);
                     } else {
-                        log('JSON External Providers 0')
+                        $("#EP2-items").append(`<div class="EP2-link"><a target="_blank"> ${tempjson.venue.external_providers[i].provider}</a></div>`);
                     }
-                    let i = 0;
-                    let count = 0;
-                    while (data.venue.external_providers != undefined && i < data.venue.external_providers.length) {
-                        if (data.venue.external_providers[i].provider === "Google") {
-                            log("Google Skipped");
-                        } else {
-                            count++;
-                            if (count === 1) {
-                                log(`External Provider ${count} Added`)
-                                $(".EP2-link").text(data.venue.external_providers[i].provider);
-                                if (data.venue.external_providers[i].provider == "Yext") {
-                                    $("#EP2-items").append(`<a target="_blank" class="EP2-link"><img class="EP2-img" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAIAAADZF8uwAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAYdEVYdFNvZnR3YXJlAHBhaW50Lm5ldCA0LjEuM40k/WcAAAF+SURBVChTPY87T9xAFIXn7xGvH7BZEvGwPc4+gKy91mSBgjIpoSOioIiEUqRIlCIIgRQaFAUh0dBQJlRICEUiWTwPz9w7jEHKreZqzrnnO2S+PwqTMoxf31XcWrCPA6Dfbr73F4ZBUvw4vyBSillaeHTcpgXnUmvtFBNVtyjzUzbfzRE1sagrXrcH7Fk2bi30QPE/XE53WWew0ekzpWtrDUEEtPbz4XHg7mXj3b1Pk3sepWWQlFXz5wCAACJa0Eb7c90gHfnpSBj8fX3z7ftPa5STWYtEoWlQ0UolwjQPMtam+d9KOvP/HqQGsG5Hy5WI0qHj9eIh1wa1MU9+J2oMxhoNbboc0WKKMqH05a+rj18PEJ2uCSEOyL2/7B8FLqu3vvNh765SQZw/H6xLhwuqEblcCRBlpUfZ1AuKWN8LObu01oqZv7isH8kIlyJMVrzszUySQ1MVAWAipEcL/9Xqy35RgyHpSulnLKLl7b/qCdMNGPlua9uVDSk7OT17AAK+PGNnA1kxAAAAAElFTkSuQmCC">${data.venue.external_providers[i].provider}</a>`);
-                                    // $(".EP2-link yext").prepend(`<img class="EP2-img" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAIAAADZF8uwAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAYdEVYdFNvZnR3YXJlAHBhaW50Lm5ldCA0LjEuM40k/WcAAAF+SURBVChTPY87T9xAFIXn7xGvH7BZEvGwPc4+gKy91mSBgjIpoSOioIiEUqRIlCIIgRQaFAUh0dBQJlRICEUiWTwPz9w7jEHKreZqzrnnO2S+PwqTMoxf31XcWrCPA6Dfbr73F4ZBUvw4vyBSillaeHTcpgXnUmvtFBNVtyjzUzbfzRE1sagrXrcH7Fk2bi30QPE/XE53WWew0ekzpWtrDUEEtPbz4XHg7mXj3b1Pk3sepWWQlFXz5wCAACJa0Eb7c90gHfnpSBj8fX3z7ftPa5STWYtEoWlQ0UolwjQPMtam+d9KOvP/HqQGsG5Hy5WI0qHj9eIh1wa1MU9+J2oMxhoNbboc0WKKMqH05a+rj18PEJ2uCSEOyL2/7B8FLqu3vvNh765SQZw/H6xLhwuqEblcCRBlpUfZ1AuKWN8LObu01oqZv7isH8kIlyJMVrzszUySQ1MVAWAipEcL/9Xqy35RgyHpSulnLKLl7b/qCdMNGPlua9uVDSk7OT17AAK+PGNnA1kxAAAAAElFTkSuQmCC">`);
-                                } else if (data.venue.external_providers[i].provider == "ParkMe") {
-                                    $(".EP2-link").prepend(`<img class="EP2-img" src="data:image/svg+xml;utf8,<?xml version='1.0' encoding='UTF-8'?><svg height='14px' version='1.1' viewBox='0 0 41.274996 72.094823' xmlns='http://www.w3.org/2000/svg' xmlns:cc='http://creativecommons.org/ns' xmlns:dc='http://purl.org/dc/elements/1.1/' xmlns:rdf='http://www.w3.org/1999/02/22-rdf-syntax-ns'><metadata><rdf:RDF><cc:Work rdf:about=''><dc:format>image/svg+xml</dc:format><dc:type rdf:resource='http://purl.org/dc/dcmitype/StillImage'/><dc:title/></cc:Work></rdf:RDF></metadata><g transform='translate(-30.767 -115.95)'><path transform='matrix(.26458 0 0 .26458 -1.5119 113.3)' d='m200 10c-42.459 0.03332-77.092 34.022-77.924 76.473l-0.07617-0.044922 0.0391 0.78516c-0.01439 0.2623-0.02741 0.52468-0.0391 0.78711 0.0266 2.5986 0.18304 5.1943 0.46875 7.7773l2.0039 39.889 0.87109 7.0879c1.0329-26.82 15.876-63.963 56.441-73.189v-13.314c-0.0149-3.9298 1.9222-5.7113 4.5664-5.5957 1.5865 0.06934 3.4275 0.82153 5.2559 2.2031l48.035 30.893c5.5202 3.2009 5.6122 7.4892 0 10.893l-48.186 32.191c-5.7761 3.1951-9.6628-0.33002-9.6719-5.584v-12.33c-58.606 8.4602-53.855 50.54-54.391 50.502l15.141 123.06c10.916-89.381 21.077-107.47 31.191-121.14 8.4251 3.051 17.313 4.6274 26.273 4.6602 43.078 0 78-34.922 78-78s-34.922-78-78-78z'/></g></svg>">`);
-                                    $(".EP2-link").attr("href",`https://www.parkme.com/lot/${data.venue.external_providers[i].id}`);
-                                    $(".EP2-link").attr("target","_blank");
-                                    $(".EP2-link").css({cursor:"pointer"});
-                                    $("#EP2-txt").append(`<i class="fas fa-link" style="position: relative;left: -10px;top: -8px;"></i>`);
-                                } else if (data.venue.external_providers[i].provider == "MapFuel") {
-                                    $(".EP2-link").prepend('<i class="EP2-img-fa fas fa-gas-pump" style="font-size: 13px;"></i> ');
-                                } else if (data.venue.external_providers[i].provider == "WazeAds") {
-                                    $(".EP2-link").prepend('<i class="EP2-img-fa fas fa-ad" style="font-size: 14px;"></i> ');
-                                } else {
-                                    $(".EP2-link").prepend('<i class="EP2-img-fa fas fa-vector-square" style="font-size: 14px;"></i> ');
-                                }
-                            } else {
-                                log(`External Provider ${count} Added`)
-                                if (data.venue.external_providers[i].provider.includes("Yext") ) {
-                                    $("#EP2-items").append(`<a target="_blank" class="EP2-link"><img class="EP2-img" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAIAAADZF8uwAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAYdEVYdFNvZnR3YXJlAHBhaW50Lm5ldCA0LjEuM40k/WcAAAF+SURBVChTPY87T9xAFIXn7xGvH7BZEvGwPc4+gKy91mSBgjIpoSOioIiEUqRIlCIIgRQaFAUh0dBQJlRICEUiWTwPz9w7jEHKreZqzrnnO2S+PwqTMoxf31XcWrCPA6Dfbr73F4ZBUvw4vyBSillaeHTcpgXnUmvtFBNVtyjzUzbfzRE1sagrXrcH7Fk2bi30QPE/XE53WWew0ekzpWtrDUEEtPbz4XHg7mXj3b1Pk3sepWWQlFXz5wCAACJa0Eb7c90gHfnpSBj8fX3z7ftPa5STWYtEoWlQ0UolwjQPMtam+d9KOvP/HqQGsG5Hy5WI0qHj9eIh1wa1MU9+J2oMxhoNbboc0WKKMqH05a+rj18PEJ2uCSEOyL2/7B8FLqu3vvNh765SQZw/H6xLhwuqEblcCRBlpUfZ1AuKWN8LObu01oqZv7isH8kIlyJMVrzszUySQ1MVAWAipEcL/9Xqy35RgyHpSulnLKLl7b/qCdMNGPlua9uVDSk7OT17AAK+PGNnA1kxAAAAAElFTkSuQmCC">${data.venue.external_providers[i].provider}</a>`);
-                                }
-                                else {
-                                    $("#EP2-items").append(`<a target="_blank" class="EP2-link"><i class="EP2-img-fa fas fa-vector-square" style="font-size: 14px;"></i> ${data.venue.external_providers[i].provider}</a>`);
-                                }
-                            }
-                        }
-                        i++;
+                    if (tempjson.venue.external_providers[i].provider == "Yext") {
+                        $("#EP2-items").append(`<div class="EP2-link"><a target="_blank"><img class="EP2-img" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAIAAADZF8uwAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAYdEVYdFNvZnR3YXJlAHBhaW50Lm5ldCA0LjEuM40k/WcAAAF+SURBVChTPY87T9xAFIXn7xGvH7BZEvGwPc4+gKy91mSBgjIpoSOioIiEUqRIlCIIgRQaFAUh0dBQJlRICEUiWTwPz9w7jEHKreZqzrnnO2S+PwqTMoxf31XcWrCPA6Dfbr73F4ZBUvw4vyBSillaeHTcpgXnUmvtFBNVtyjzUzbfzRE1sagrXrcH7Fk2bi30QPE/XE53WWew0ekzpWtrDUEEtPbz4XHg7mXj3b1Pk3sepWWQlFXz5wCAACJa0Eb7c90gHfnpSBj8fX3z7ftPa5STWYtEoWlQ0UolwjQPMtam+d9KOvP/HqQGsG5Hy5WI0qHj9eIh1wa1MU9+J2oMxhoNbboc0WKKMqH05a+rj18PEJ2uCSEOyL2/7B8FLqu3vvNh765SQZw/H6xLhwuqEblcCRBlpUfZ1AuKWN8LObu01oqZv7isH8kIlyJMVrzszUySQ1MVAWAipEcL/9Xqy35RgyHpSulnLKLl7b/qCdMNGPlua9uVDSk7OT17AAK+PGNnA1kxAAAAAElFTkSuQmCC">${tempjson.venue.external_providers[i].provider}</a></div>`);
+                        // $(".EP2-link yext").prepend(`<img class="EP2-img" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAIAAADZF8uwAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAYdEVYdFNvZnR3YXJlAHBhaW50Lm5ldCA0LjEuM40k/WcAAAF+SURBVChTPY87T9xAFIXn7xGvH7BZEvGwPc4+gKy91mSBgjIpoSOioIiEUqRIlCIIgRQaFAUh0dBQJlRICEUiWTwPz9w7jEHKreZqzrnnO2S+PwqTMoxf31XcWrCPA6Dfbr73F4ZBUvw4vyBSillaeHTcpgXnUmvtFBNVtyjzUzbfzRE1sagrXrcH7Fk2bi30QPE/XE53WWew0ekzpWtrDUEEtPbz4XHg7mXj3b1Pk3sepWWQlFXz5wCAACJa0Eb7c90gHfnpSBj8fX3z7ftPa5STWYtEoWlQ0UolwjQPMtam+d9KOvP/HqQGsG5Hy5WI0qHj9eIh1wa1MU9+J2oMxhoNbboc0WKKMqH05a+rj18PEJ2uCSEOyL2/7B8FLqu3vvNh765SQZw/H6xLhwuqEblcCRBlpUfZ1AuKWN8LObu01oqZv7isH8kIlyJMVrzszUySQ1MVAWAipEcL/9Xqy35RgyHpSulnLKLl7b/qCdMNGPlua9uVDSk7OT17AAK+PGNnA1kxAAAAAElFTkSuQmCC">`);
+                    } else if (tempjson.venue.external_providers[i].provider == "ParkMe") {
+                        $(`#EP2-items > div:nth-child(${count}) > a`).prepend(`<img class="EP2-img" style="height: 18px;padding: 0px;margin: -2px;" src="https://scontent-ort2-2.xx.fbcdn.net/v/t1.0-1/cp0/p40x40/11781849_848814071840232_8207251348696912842_n.png?_nc_cat=100&ccb=2&_nc_sid=1eb0c7&_nc_ohc=dP4o4TyCiUUAX9eej3x&_nc_ht=scontent-ort2-2.xx&oh=acc62fa3bb6bfa26d39a5529bef53f02&oe=5FE50004">`);
+                        $(`#EP2-items > div:nth-child(${count}) > a`).attr("href",`https://www.parkme.com/lot/${tempjson.venue.external_providers[i].id}`);
+                        $(`#EP2-items > div:nth-child(${count}) > a`).attr("target","_blank")[count-1];
+                        $(`#EP2-items > div:nth-child(${count}) > a`).css({cursor:"pointer"})[count-1];
+                        $(`#EP2-items > div:nth-child(${count}) > a`).append(`<i class="fa fa-link" style="position: absolute;left: 88%;"></i>`);
+                    } else if (tempjson.venue.external_providers[i].provider == "MapFuel" || tempjson.venue.external_providers[i].provider == "OPIS Gas Stations") {
+                        $(`#EP2-items > div:nth-child(${count}) > a`).prepend('<i class="EP2-img-fa fas fa-gas-pump" style="font-size: 14px;"></i> ');
+                    } else if (tempjson.venue.external_providers[i].provider == "WazeAds") {
+                        $(`#EP2-items > div:nth-child(${count}) > a`).prepend('<i class="EP2-img-fa fas fa-ad" style="font-size: 14px;"></i> ');
+                    } else {
+                        $(`#EP2-items > div:nth-child(${count}) > a`).prepend('<i class="EP2-img-fa fas fa-server" style="font-size: 14px;"></i> ');
                     }
-                });
+                } i++;
             }
         }
 
@@ -1874,10 +1834,9 @@ function JSONStringify(object) {
         return matrix[b.length][a.length];
     };
 
-    function init(){
-        log("Initializing");
-        injectCss();
+    function initLayer(){
         initializeSettings();
+        log("Initializing Layer");
 
         // Add the layer
         _adPinsLayer = new OpenLayers.Layer.Markers("wmeEpdLayerAdPins",{uniqueName: "__wmeEpdLayerAdPins"})
@@ -1896,7 +1855,7 @@ function JSONStringify(object) {
 
         // Add the layer checkbox to the Layers menu
         WazeWrap.Interface.AddLayerCheckbox('Places', 'Ad pins', _settings.AdPin, onAdPinLayerCheckboxChanged);
-        if (getUrlParameter('venues').length>0) {
+        if (getUrlParameter('venues').length>0 && W.selectionManager.getSelectedFeatures()[0] != undefined) {
             insertExternalProviders2()
             }
         let observer = new MutationObserver(mutations => {
@@ -1928,6 +1887,8 @@ function JSONStringify(object) {
     function bootstrap(tries = 1) {
         //log("bootstrap attempt "+ tries);
         if (W && W.map && W.model && W.loginManager.user && $ && WazeWrap.Ready) {
+            initializei18n();
+            injectCss();
             initTab();
             installIcon()
         } else if (tries < 1000) {
