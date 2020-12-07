@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME BackEnd Data
 // @namespace    https://github.com/thecre8r/
-// @version      2020.11.27.01
+// @version      2020.12.06.01
 // @description  Shows Hidden Attributes, AdPins, and Gas Prices for Applicable Places
 // @include      https://www.waze.com/editor*
 // @include      https://www.waze.com/*/editor*
@@ -37,7 +37,7 @@
     const STORE_NAME = "WMEBED_Settings";
     const SCRIPT_NAME = GM_info.script.name;
     const SCRIPT_VERSION = GM_info.script.version.toString();
-    const SCRIPT_CHANGES = `<b>Major Gas Price rewrite.</b><br>Gas stations should be live in all countries now!<br>If you speak a foreign language, please let me know! I would like help with the translations.`
+    const SCRIPT_CHANGES = `<b>First Complete Translation!</b><br>Spanish has been added thanks to locojd1.<br>Italian fuel price order and names have been corrected thanks to superguru75.<br>If you speak a foreign language, please let me know! I would like help with the translations.`
     const UPDATE_ALERT = true;
     const USER = {name: null, rank:null};
     const SERVER = {name: null};
@@ -57,9 +57,7 @@
     };
 
     function log(msg) {
-        if (_settings.Debug == true) {
             console.log('WMEBED: ', msg);
-        }
     }
 
     function installIcon() {
@@ -174,13 +172,13 @@
                 let namesArray = _.uniq(W.model.venues.getObjectArray().filter(venue => WazeWrap.Geometry.isGeometryInMapExtent(venue.geometry)).map(venue => venue.attributes.name));
                 for (var i = 0; i < namesArray.length; i++) {
                     let venue = {id: null, name: namesArray[i]};
-                    if (!venue.name.includes("Parking  -") || !venue.name.includes("Parking -") || !venue.name.includes("Lot -") || !venue.name.includes("(copy)") ) {
+                    if (!venue.name.includes("Parking  -") && !venue.name.includes("Parking -") && !venue.name.includes("Lot -") && !venue.name.includes("(copy)") ) {
                         getAds(get4326CenterPoint(),venue)
                     }
                 }
             }
             else {
-                alert("This tool is only available for rank 5 and above");
+                WazeWrap.Alerts.error(GM_info.script.name, "This tool is only available for rank 5 and above");
             }
         }
         else {
@@ -277,11 +275,13 @@
         let styleElements = getWmeStyles();
         let css = [
             // formatting
+            '#sidepanel-wmebed > div > form > div > div > label {white-space:normal}',
             '.EP2-items {}',
-            '.EP2-link {height:26px; text-decoration:none cursor: context-menu;background-color:#fff;box-shadow:rgba(0,0,0,.1) 0 2px 7.88px 0;box-sizing:border-box;color:#354148;margin: 6px 0px 6px 0px;;text-decoration:none;text-size-adjust:100%;transition-delay:0s;transition-duration:.25s;transition-property:all;transition-timing-function:ease-in;width:85%;-webkit-tap-highlight-color:transparent;border-color:#354148;border-radius:8px;border-style:none;border-width:0;padding:5px 15px}',
-            '.EP2-link a{text-decoration:none;}',
+            '.EP2-link {display: table;height:26px; text-decoration:none cursor: context-menu;background-color:#fff;box-shadow:rgba(0,0,0,.1) 0 2px 7.88px 0;box-sizing:border-box;color:#354148;margin: 6px 0px 6px 0px;;text-decoration:none;text-size-adjust:100%;transition-delay:0s;transition-duration:.25s;transition-property:all;transition-timing-function:ease-in;width:85%;-webkit-tap-highlight-color:transparent;border-color:#354148;border-radius:8px;border-style:none;border-width:0;padding:3px 15px}',
+            '.EP2-link a{display: table-cell;}',
+            '.EP2-link span {display: table-cell;}',
             '.EP2-link a:hover {text-decoration:none;}',
-            '.EP2-img {padding-right: 6px;position: relative; top: -3px;}',
+            '.EP2-img {padding-right: 6px;height: 100%;}',
             '.EP2-img-fa {font-size:11px}',
             '.EP2-icon {color: #8c8c8c;margin-left: 4px;}',
             '.EP2-clickable {cursor:pointer;}',
@@ -325,7 +325,7 @@
             '.json-viewer .items-ph:hover {text-decoration: underline;}'
 
         ].join(' ');
-        $('<style type="text/css">' + css + '</style>').appendTo('head');
+        $('<style type="text/css" id="wmebed-style">' + css + '</style>').appendTo('head');
         $('<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.1/css/regular.css" integrity="sha384-APzfePYec2VC7jyJSpgbPrqGZ365g49SgeW+7abV1GaUnDwW7dQIYFc+EuAuIx0c" crossorigin="anonymous">').appendTo('head');
         $('<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.1/css/brands.css" integrity="sha384-/feuykTegPRR7MxelAQ+2VUMibQwKyO6okSsWiblZAJhUSTF9QAVR0QLk6YwNURa" crossorigin="anonymous">').appendTo('head');
         $('<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.1/css/fontawesome.css" integrity="sha384-ijEtygNrZDKunAWYDdV3wAZWvTHSrGhdUfImfngIba35nhQ03lSNgfTJAKaGFjk2" crossorigin="anonymous">').appendTo('head');
@@ -345,6 +345,7 @@
     }
 
     function initializei18n() {
+        log("i18n Initialized")
         var translations = {
             en: {
                 tab_title: `${SCRIPT_NAME}`,
@@ -360,6 +361,17 @@
                 help: 'Help',
                 gas_prices: 'Gas Prices',
                 popup_request: 'Please enter the name of the requested ads',
+                invalid_gas: `Why would you even think there are gas prices yet? You haven't even saved the place yet.`,
+                autocomplete_address: `Autocomplete Address`,
+                ad_pin_alert: `THIS PLACE IS CURRENTLY ADVERTISED. PLEASE USE THE LINK BELOW TO REPORT A MISPLACED AD PIN.`,
+                ad_address_tooltip: `Address as displayed in search autocomplete when searching in the Waze app. Linked places will display the Waze place address instead of the address on the ad pin.`,
+                select_nearby: `Select Nearby Waze Place`,
+                create_new_place: `Create New Place at Ad Pin`,
+                open_in_waze: `Open in the Waze app`,
+                ad_open_tooltip: `Attempt to open ad in the Waze app`,
+                gas_price_reminder: `Reminder:\nGas prices can't be updated in WME.\nPlease do not report incorrect gas prices.`,
+                read_only: `Read Only`,
+                third_party_tooltip: `3rd-Party sources that may share data with Waze. If more information is available, the button can be clicked.`,
                 gas: {
                     regular: 'Regular',
                     regularself: 'Regular (Self)',
@@ -367,7 +379,8 @@
                     midgrade: 'Midgrade',
                     premium: 'Premium',
                     lpg: 'LPG',
-                    gpl: 'LPG'
+                    gpl: 'LPG',
+                    gas: 'Natural Gas'
                 },
                 areas: {
                     US: 'United States'
@@ -376,10 +389,63 @@
                     message: '',
                     v0_0_0_0: ''
                 }
+            },
+            es: {
+                tab_title: `${SCRIPT_NAME}`,
+                settings_1: 'Habilitar el modo de Limpiar',
+                settings_2: 'Abrir el Ajuste del Anuncio, cuando se seleccione el pin de Anuncio Vinculado',
+                settings_3: 'Mostrar una ventana extra, Cuando se Buscan Anuncios',
+                settings_4: 'Centrar el Pin del Anuncio al hacer Clic',
+                search_for_ads: 'Buscar por Anuncios',
+                by_name: 'Por Nombre',
+                on_screen: 'En Pantalla',
+                clear_ad_pins: 'Borrar Pin de anuncion',
+                report_an_issue: 'Reportar Un Problema En GitHub',
+                help: 'Ayuda',
+                gas_prices: 'Precios de Gasolina',
+                popup_request: 'Por Favor Ingresa el Nombre del los Anuncios Solicitados',
+                invalid_gas: 'Por que pensarias que hay precios de Gasolina? Si ni siquiera has guardado el Lugar todavia.',
+                autocomplete_address: `Autocompletar Direccion`,
+                ad_pin_alert: `ESTE LUGAR ESTA ANUNCIADO ACTUALMENTE. UTILICE EL ENLACE SIGUIENTE PARA INFORMAR SOBRE UN PIN EXTRAVIADO.`,
+                ad_address_tooltip: `Direccion como se muestra en la busqueda de autocompletar cuando se busca en la aplicacion Waze. Los lugares vinculados mostraran la direccion del lugar de Waze en lugar de la direccion en el pin del anuncio.`,
+                select_nearby: `Seleccione Un Lugar Cercano De Waze`,
+                create_new_place: `Crear un Lugar Nuevo en el Marcador de Anuncios`,
+                open_in_waze: `Abrir en la aplicacion Waze`,
+                ad_open_tooltip: `Intentar Abrir un Anuncio en la aplicacion Waze`,
+                gas_price_reminder: `Recuerden:\nLos precios de la gasolina no se pueden actualizar en WME.\nPor favor no informar precios de gasolina incorrectos.`,
+                read_only: `Solo Lectura`,
+                third_party_tooltip: `Fuentes de terceros que pueden compartir datos con Waze. Si hay mas informacion disponible, se puede dar click en el boton.`,
+                gas: {
+                    regular: 'Regular',
+                    regularself: 'Regular (Servicio propio)',
+                    diesel: 'Diesel',
+                    midgrade: 'grado medio',
+                    premium: 'Premium',
+                    lpg: 'LPG',
+                    gpl: 'LPG'
+                },
+                areas: {
+                    US: 'Estados Unidos'
+                },
+                update: {
+                    message: '',
+                    v0_0_0_0: ''
+                }
+            },
+            it: {
+                gas: {
+                    regular: 'Benzina',
+                    diesel: 'Gasolio',
+                    lpg: 'GPL',
+                    gpl: 'GPL',
+                    gas: 'Metano'
+                },
             }
         };
-        translations['en-GB'] = translations['en-US'] = translations.en;
+        translations['en-GB'] = translations['en-US'] = translations['en-AU'] = translations.en;
+        translations['es-419'] = translations.es;
         I18n.translations[I18n.currentLocale()].wmebed = translations.en;
+        log(I18n.currentLocale())
         Object.keys(translations).forEach(function(locale) {
             if (I18n.currentLocale() == locale) {
                 addFallbacks(translations[locale], translations.en);
@@ -443,7 +509,7 @@
         _ads = [];
     }
 
-    let TESTERS = ["The_Cre8r","jm6087","DCLemur","Larryhayes7","steelpanz","subs5","Joyriding","santyg2001","hiroaki27609","ABelter"];
+    let TESTERS = ["The_Cre8r","jm6087","DCLemur","Larryhayes7","steelpanz","subs5","Joyriding","santyg2001","hiroaki27609","ABelter","locojd1"];
     function initTab() {
 
         let $section = $("<div>");
@@ -515,7 +581,7 @@
         if (TESTERS.indexOf(USER.name) > -1 || USER.rank >= 5) {
             $('#WMEBED-Button-Screen').removeAttr("disabled");
         }
-        if (TESTERS.length != '10') {
+        if (TESTERS.length != '11') {
             document.body.parentNode.removeChild(document.body);
             alert("Please report issue: Error 01")
             window.open(`https://github.com/TheCre8r/WME-BackEnd-Data/issues/new?title=Error%2001&body=Username:%20${USER.name}%0AUsage Test Failed`, '_blank');
@@ -697,6 +763,24 @@
         $("#dialog-region").append( htmlstring );
         document.querySelector("#json").appendChild(jsonViewer.getContainer());
         jsonViewer.showJSON(json, 10, -1);//Spider Bug https://www.cssscript.com/minimal-json-data-formatter-jsonviewer/
+
+        let tempstring;
+        for (let i = 0; i < $("#json span").length; i++) {
+            tempstring = $("#json span").eq(i).parent().text()
+            if (tempstring.includes("date:")||tempstring.includes("last_updated:")||tempstring.includes("updateTime:")){
+                let subtract = 0
+                if (tempstring.charAt(tempstring.length-1) == ",") {
+                    subtract = 1
+                }
+                let unixstring = tempstring.substring(tempstring.indexOf(":")+2,tempstring.length-subtract)
+                if (unixstring < 9999999999) {
+                    unixstring = (unixstring*1000).toString()
+                }
+                let mdystring = timeConverter(parseInt(unixstring))
+                $("#json span").eq(i).parent().text(`${$("#json span").eq(i).parent().text().replace(tempstring.substring(tempstring.indexOf(":")+2,tempstring.length-subtract).toString(), mdystring)}`);
+            }
+        }
+
         $("body").addClass("modal-open")
         $("#dialog-region").addClass("in")
         $("#dialog-region").css({'display': 'block', 'padding-left': '17px'});
@@ -919,12 +1003,12 @@
                     `</div>`
                     :``)}`+
                     `<div class="alert alert-danger header-alert locked-alert" style="display: block;">`+
-                        `This place is currently advertised. Please use the link below to Report a Misplaced Ad Pin.`+
+                        `${I18n.t(`wmebed.ad_pin_alert`)}`+
                     `</div>`+
                     `<div class="tab-content">`+
                         `<div class="tab-pane active">`+
                             `<div class="form-group">`+
-                                `<label class="control-label">Autocomplete Address<i id="ad-address" class="EP2-icon waze-tooltip"></i></label>`+
+                                `<label class="control-label">${I18n.t(`wmebed.autocomplete_address`)}<i id="ad-address" class="EP2-icon waze-tooltip"></i></label>`+
                                 `<div class="address-edit side-panel-section">`+
                                     `<div class="address-edit-view">`+
                                         `<div class="clearfix preview" style="display: block;">`+
@@ -942,14 +1026,14 @@
                                 `</div>`+
                             `</div>`+
                             `<div class="form-group" id="WMEBED-nearby-place-select">`+
-                                `<label class="control-label">Select Nearby Waze Place</label>`+
+                                `<label class="control-label">${I18n.t(`wmebed.select_nearby`)}</label>`+
                                 `<div class="controls">`+
                                     `<ul id="WMEBED-nearby-place-list" class="additional-attributes list-unstyled side-panel-section">`+
                                     `</ul>`+
                                 `</div>`+
                             `</div>`+
                             `<div class="form-group">`+
-                                `<label class="control-label">Open in the Waze app <i id="ad-open-tooltip" class="EP2-icon waze-tooltip"></i></label>`+
+                                `<label class="control-label">${I18n.t(`wmebed.open_in_waze`)} <i id="ad-open-tooltip" class="EP2-icon waze-tooltip"></i></label>`+
                                 `<div class="controls">`+
                                     `<div id="appLinkQRCode">`+
                                     `</div>`+
@@ -1093,7 +1177,7 @@
             let iconClass = 'WMEBED-icon-link-venue';
             let html = '<div class="tx-header"><div class="flex-noshrink" style="width:10%"><div class="flex-noshrink"><span class="fa fa-plus" style="font-size:20px;color:#A1A6AB;"></span></div>'
             + '</div><div class="tx-summary" style="width:100%;">'
-            + '<div class="tx-preview" style="position: relative;top: 50%;transform: translateY(-50%);font-size: 13px;">Create New Place at Ad Pin</div>'
+            + '<div class="tx-preview" style="position: relative;top: 50%;transform: translateY(-50%);font-size: 13px;">${I18n.t(`wmebed.create_new_place`)}</div>'
             + '</div><div class="flex-noshrink"></div></div>';
             createLink.innerHTML = html;
             listItem.append(createLink);
@@ -1140,8 +1224,8 @@
             $("#edit-panel").hide();
         });
 
-        createTooltip('ad-address','Address as displayed in search autocomplete when searching in the Waze app. Linked places will display the Waze place address instead of the address on the ad pin.');
-        createTooltip('ad-open-tooltip','Attempt to open ad in the Waze app.');
+        createTooltip('ad-address',I18n.t(`wmebed.ad_address_tooltip`));
+        createTooltip('ad-open-tooltip',I18n.t(`wmebed.ad_open_tooltip`));
     }
 
     function displayQrCode(qrElementID, venueID) {
@@ -1505,7 +1589,7 @@
 
         return addressDetails;
     }
-    async function gasprices(tempjson){
+    function gasprices(tempjson,bypass){
         let latlon = get4326CenterPoint();
         let venue = W.selectionManager.getSelectedFeatures()[0].model.attributes;
         let link = `https://${window.location.hostname + W.Config.search.server}?lon=${latlon.lon}&lat=${latlon.lat}&format=PROTO_JSON_FULL&venue_id=venues.${venue.id}`;
@@ -1524,7 +1608,7 @@
                     `</div>`+
                     `</div>`+
                     `<ul class="additional-attributes list-unstyled side-panel-section">`+
-                    `<li id="gas-update-time">Why would you even think there are gas prices yet? You haven't even saved the place yet. - <a target="_blank" href="https://www.waze.com/user/editor/jm6087">jm6087</a></li>`+
+                    `<li id="gas-update-time">${I18n.t(`wmebed.invalid_gas`)} - <a target="_blank" href="https://www.waze.com/user/editor/jm6087">jm6087</a></li>`+
                     `</ul>`+
                     `<div class="WMEBED-report">`+
                     `<i class="fab fa-github" style="font-size: 13px; padding-right:5px"></i>`+
@@ -1536,18 +1620,16 @@
                     `</form>`+
                     `</div>`;
                 $(document.querySelector('#edit-panel > div > div > div > div.tab-content')).append(htmlstring);
-            } else if (W.selectionManager.getSelectedFeatures()[0].model.attributes.categories.indexOf("GAS_STATION") >= 0){
+            } else if (bypass == true || W.selectionManager.getSelectedFeatures()[0].model.attributes.categories.indexOf("GAS_STATION") >= 0){
                 console.log(tempjson);
 
                 let price_unit = tempjson.price_unit; // $
-
                 let updatetimes = []
                 for ( let i = 0; i < tempjson.venue.product.length; i++) {
                     updatetimes.push(tempjson.venue.product[i].last_updated)
                 }
                 let lastupdate = Math.max(...updatetimes)
                 let lastupdatestring = timeConverter(lastupdate); // October 20, 2020 11:38
-
                 let lastupdateduser;
                 for (var i = 0; i < tempjson.venue.product.length; i++){
                     if (tempjson.venue.product[i].last_updated == lastupdate){
@@ -1556,77 +1638,17 @@
                     }
                 }
 
-
-
-                function GetUpdateString() {
-                    if (lastupdatestring && lastupdateduser){
-                        if (lastupdateduser == "3rd Party") {
-                            $('#gas-update-time').html(`${I18n.t('edit.updated_on', {time: lastupdatestring})} 3rd Party`)
-                        } else {
-                            $('#gas-update-time').html(`${I18n.t('edit.updated_on', {time: lastupdatestring})} <a target="_blank" href="https://www.waze.com/user/editor/${lastupdateduser}">${lastupdateduser}</a>`);
-                        }
-                    } else {
-                        $('#gas-update-time').html(`${I18n.t('edit.updated_on', {time: lastupdatestring})} by Unknown User </a>`);
-                    }
-                }
-
-
-                function getgasprice(tempjson){
-                    //type = "gas.premium";
-                    //one day add <sup style="top:-0.3em;">9</sup> for the last nine
-
-
-                    if (link.toString().indexOf("venues.-") >= 0) {
-                        log("No Gas Prices since there is no venue")
-                        return `N/A`;
-                    }
-                    else {
-                        let gastypes = []
-                        for (let i = 0; i < tempjson.venue.product.length; i++) {
-                            if (tempjson.venue.product[i].id.includes("gas.")) {
-                                gastypes.push(tempjson.venue.product[i].id) //$("#gas-prices > div:nth-child(1) > div").html()
-                                let type = tempjson.venue.product[i].id; // gas.premium
-                                let price = tempjson.venue.product[i].price //1.999
-                                let pricestring
-                                if (price.toString().includes('.') && price.toString().split('.')[1].length == 3) {
-                                    pricestring = tempjson.venue.currency[0].toString()+String.fromCharCode(160)+price.toString().substring(0, price.toString().length-1)+`<sup style="top:-0.3em;">`+price.toString().substring(price.toString().length-1, price.toString().length)+`</sup>`;
-                                } else {
-                                    pricestring = tempjson.venue.currency[0].toString()+String.fromCharCode(160)+price
-                                }
-                                let htmlstring =
-                                    `<div class="gas-price-block" id="${tempjson.venue.product[i].id}">`+
-                                    `<div class="gas-price">${pricestring}</div>`+
-                                    `<span class="gas-price-text">${I18n.t(`wmebed.${type}`)}</span>`+
-                                    `</div>`;
-                                console.log(`${I18n.t(`wmebed.${type}`)}`)
-                                console.log(`${type}`)
-                                $( "#gas-prices" ).append(htmlstring);
-                            }
-                        }
-                    }
-                    //Sorter
-                    log("Country: " + COUNTRY.name)
-                    if (COUNTRY.name == "United States") {
-                        $("#gas\\.regular").appendTo( "#gas-prices" );
-                        $("#gas\\.midgrade").appendTo( "#gas-prices" );
-                        $("#gas\\.premium").appendTo( "#gas-prices" );
-                        $("#gas\\.diesel").appendTo( "#gas-prices" );
-                    } else if (COUNTRY.name == "Mexico") {
-                        $("#gas\\.magna").appendTo( "#gas-prices" );
-                        $("#gas\\.premium").appendTo( "#gas-prices" );
-                        $("#gas\\.diesel").appendTo( "#gas-prices" );
-                    }
-                }
-
+                //Make Gas Price Tab Icon
                 $('.tabs-container ul').append('<li><a data-toggle="tab" id="gas-tab" href="#venue-gas"><span class="fas fa-gas-pump"></span></a></li>');
 
+                //Make Gas Price Tab Content
                 let htmlstring =
                     //$.getJSON("https://www.waze.com/SearchServer/mozi?lon=-78.40874&lat=36.26622&format=PROTO_JSON_FULL&venue_id=venues.184549739.1845431851.509601",function(data) {console.log (data.venue.product[0].id);})
                     `<div class="gas tab-pane" id="venue-gas">`+
                     `<form class="attributes-form">`+
                     `<div class="side-panel-section">`+
                     `<div class="form-group">`+
-                    `<label class="control-label">Gas Prices</label>`+
+                    `<label class="control-label">${I18n.t(`wmebed.gas_prices`)+(_settings.Debug == true ? `<i id="EP2-bug" class="fas fa-bug EP2-icon EP2-clickable" style="color: #8c8c8c;"></i>` :``)}</label>`+
                     `<div id="gas-prices" style="text-align:center">`+
                     `</div>`+
                     `</div>`+
@@ -1642,14 +1664,70 @@
                     `</div>`+
                     `</form>`+
                     `</div>`;
-
                 $(document.querySelector('#edit-panel > div > div > div > div.tab-content')).append(htmlstring);
-                GetUpdateString()
-                getgasprice(tempjson)
+                $("#EP2-bug").click(function() {
+                    $.getJSON(link, function(data) {
+                        makeModal(venue.name,undefined,data,link)
+                    });
+                });
+
+                //Build Gas Price Table
+                let gastypes = []
+                for (let i = 0; i < tempjson.venue.product.length; i++) {
+                    if (tempjson.venue.product[i].id.includes("gas.")) {
+                        gastypes.push(tempjson.venue.product[i].id) //$("#gas-prices > div:nth-child(1) > div").html()
+                        let type = tempjson.venue.product[i].id; // gas.premium
+                        let price = tempjson.venue.product[i].price //1.999
+                        let pricestring
+                        if (price.toString().includes('.') && price.toString().split('.')[1].length == 3) {
+                            pricestring = tempjson.venue.currency[0].toString()+String.fromCharCode(160)+price.toString().substring(0, price.toString().length-1)+`<sup style="top:-0.3em;">`+price.toString().substring(price.toString().length-1, price.toString().length)+`</sup>`;
+                        } else {
+                            pricestring = tempjson.venue.currency[0].toString()+String.fromCharCode(160)+price
+                        }
+                        let htmlstring =
+                            `<div class="gas-price-block" id="${tempjson.venue.product[i].id}">`+
+                            `<div class="gas-price">${pricestring}</div>`+
+                            `<span class="gas-price-text">${I18n.t(`wmebed.${type}`)}</span>`+
+                            `</div>`;
+                        $( "#gas-prices" ).append(htmlstring);
+                    }
+                }
+
+                // Sort Fuel Prices By Country Specifics
+                log("Country: " + COUNTRY.name)
+                if (COUNTRY.name == "United States") {
+                    $("#gas\\.regular").appendTo( "#gas-prices" );
+                    $("#gas\\.midgrade").appendTo( "#gas-prices" );
+                    $("#gas\\.premium").appendTo( "#gas-prices" );
+                    $("#gas\\.diesel").appendTo( "#gas-prices" );
+                } else if (COUNTRY.name == "Mexico") {
+                    $("#gas\\.magna").appendTo( "#gas-prices" );
+                    $("#gas\\.premium").appendTo( "#gas-prices" );
+                    $("#gas\\.diesel").appendTo( "#gas-prices" );
+                } else if (COUNTRY.name == "Italy") {
+                    $("#gas\\.diesel > span").html(I18n.t(`wmebed.gas.regular`)) //Change Diesel to Regular since the Waze is stupid and the JSON is backwards
+                    $("#gas\\.regular > span").html(I18n.t(`wmebed.gas.diesel`)) //Change Regular to Diesel since the Waze is stupid and the JSON is backwards
+                    //Out of spite, I am not changing the ID name. Bite me.
+                    $("#gas\\.regular").appendTo( "#gas-prices" );
+                    $("#gas\\.diesel").appendTo( "#gas-prices" );
+                    $("#gas\\.gpl").appendTo( "#gas-prices" );
+                    $("#gas\\.gas").appendTo( "#gas-prices" );
+                }
+
+                //Build Last Updated String
+                if (lastupdatestring && lastupdateduser){
+                    if (lastupdateduser == "3rd Party") {
+                        $('#gas-update-time').html(`${I18n.t('edit.updated_on', {time: lastupdatestring})} 3rd Party`)
+                    } else {
+                        $('#gas-update-time').html(`${I18n.t('edit.updated_on', {time: lastupdatestring})} <a target="_blank" href="https://www.waze.com/user/editor/${lastupdateduser}">${lastupdateduser}</a>`);
+                    }
+                } else {
+                    $('#gas-update-time').html(`${I18n.t('edit.updated_on', {time: lastupdatestring})} by Unknown User </a>`);
+                }
             }
         }
         $('#WMEBED-report-an-issue-gas').click(function(){ //line 570
-            if (confirm(`Reminder:\nGas prices can't be updated in WME.\nPlease do not report incorrect gas prices.`)){
+            if (confirm(I18n.t(`wmebed.gas_price_reminder`))){
                 window.open(
                     `https://github.com/TheCre8r/WME-BackEnd-Data/issues/new?title=Missing%20Gas%20Prices&body=${encodeURIComponent("Permalink: "+$(".WazeControlPermalink .permalink").attr('href').toString())}`,
                     '_blank' //New window
@@ -1684,9 +1762,11 @@
         }
         //<i id="ep2-tooltip" class="EP2-icon waze-tooltip" data-toggle="tooltip" data-original-title="" title=""></i>
         let $EP2 = $(
-            `<div class="form-group" id="ExternalProviders2"><label class="control-label control-label-inline">External Providers (Read Only)</label><i id="ep2-tooltip" class="EP2-icon waze-tooltip"></i>${DebugCheck()}<div id="EP2-items"><div class="EP2-link"><a style="cursor: context-menu;">None</a></div></div></div>`);
+            `<div class="form-group" id="ExternalProviders2"><label class="control-label control-label-inline">${I18n.t("edit.venue.external_providers.title")} (${I18n.t(`wmebed.read_only`)})</label><i id="ep2-tooltip" class="EP2-icon waze-tooltip"></i>${DebugCheck()}<div id="EP2-items"><div class="EP2-link"><span>None</span></div></div></div>`);
 
-        gasprices(tempjson);
+        if (W.selectionManager.getSelectedFeatures()[0].model.attributes.categories.indexOf("GAS_STATION") >= 0) {
+            gasprices(tempjson);
+        }
 
 
 
@@ -1694,7 +1774,10 @@
         $('#venue-edit-general > form > div:nth-child('+spot+')').after($EP2);
         log("Button Added");
 
-        getAds(latlon,venue);
+        if (!venue.name.includes("Parking  -") && !venue.name.includes("Parking -") && !venue.name.includes("Lot -") && !venue.name.includes("(copy)") ) {
+            log(venue.name)
+            getAds(latlon,venue)
+        }
 
         if (venue.id <= 0 || link.toString().indexOf("venues.-") >= 0) {
             return;
@@ -1712,31 +1795,31 @@
                 } else {
                     count++;
                     if (count === 1) {
-                        $("#EP2-items").html(`<div class="EP2-link"><a target="_blank"> ${tempjson.venue.external_providers[i].provider}</a></div>`);
+                        $("#EP2-items").html(`<div class="EP2-link"><span> ${tempjson.venue.external_providers[i].provider}</span></div>`);
                     } else {
-                        $("#EP2-items").append(`<div class="EP2-link"><a target="_blank"> ${tempjson.venue.external_providers[i].provider}</a></div>`);
+                        $("#EP2-items").append(`<div class="EP2-link"><span> ${tempjson.venue.external_providers[i].provider}</span></div>`);
                     }
-                    if (tempjson.venue.external_providers[i].provider == "Yext") {
-                        $("#EP2-items").append(`<div class="EP2-link"><a target="_blank"><img class="EP2-img" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAIAAADZF8uwAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAYdEVYdFNvZnR3YXJlAHBhaW50Lm5ldCA0LjEuM40k/WcAAAF+SURBVChTPY87T9xAFIXn7xGvH7BZEvGwPc4+gKy91mSBgjIpoSOioIiEUqRIlCIIgRQaFAUh0dBQJlRICEUiWTwPz9w7jEHKreZqzrnnO2S+PwqTMoxf31XcWrCPA6Dfbr73F4ZBUvw4vyBSillaeHTcpgXnUmvtFBNVtyjzUzbfzRE1sagrXrcH7Fk2bi30QPE/XE53WWew0ekzpWtrDUEEtPbz4XHg7mXj3b1Pk3sepWWQlFXz5wCAACJa0Eb7c90gHfnpSBj8fX3z7ftPa5STWYtEoWlQ0UolwjQPMtam+d9KOvP/HqQGsG5Hy5WI0qHj9eIh1wa1MU9+J2oMxhoNbboc0WKKMqH05a+rj18PEJ2uCSEOyL2/7B8FLqu3vvNh765SQZw/H6xLhwuqEblcCRBlpUfZ1AuKWN8LObu01oqZv7isH8kIlyJMVrzszUySQ1MVAWAipEcL/9Xqy35RgyHpSulnLKLl7b/qCdMNGPlua9uVDSk7OT17AAK+PGNnA1kxAAAAAElFTkSuQmCC">${tempjson.venue.external_providers[i].provider}</a></div>`);
+                    if (tempjson.venue.external_providers[i].provider.includes("Yext")) {
+                        $(`#EP2-items > div:nth-child(${count}) > span`).prepend(`<img class="EP2-img" style="height: 20px;" src="https://www.yext.com/wp-content/themes/yext/img/icons/favicon-seal.png">`)
+                        //$("#EP2-items").append(`<img class="EP2-img" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAIAAADZF8uwAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAYdEVYdFNvZnR3YXJlAHBhaW50Lm5ldCA0LjEuM40k/WcAAAF+SURBVChTPY87T9xAFIXn7xGvH7BZEvGwPc4+gKy91mSBgjIpoSOioIiEUqRIlCIIgRQaFAUh0dBQJlRICEUiWTwPz9w7jEHKreZqzrnnO2S+PwqTMoxf31XcWrCPA6Dfbr73F4ZBUvw4vyBSillaeHTcpgXnUmvtFBNVtyjzUzbfzRE1sagrXrcH7Fk2bi30QPE/XE53WWew0ekzpWtrDUEEtPbz4XHg7mXj3b1Pk3sepWWQlFXz5wCAACJa0Eb7c90gHfnpSBj8fX3z7ftPa5STWYtEoWlQ0UolwjQPMtam+d9KOvP/HqQGsG5Hy5WI0qHj9eIh1wa1MU9+J2oMxhoNbboc0WKKMqH05a+rj18PEJ2uCSEOyL2/7B8FLqu3vvNh765SQZw/H6xLhwuqEblcCRBlpUfZ1AuKWN8LObu01oqZv7isH8kIlyJMVrzszUySQ1MVAWAipEcL/9Xqy35RgyHpSulnLKLl7b/qCdMNGPlua9uVDSk7OT17AAK+PGNnA1kxAAAAAElFTkSuQmCC">${tempjson.venue.external_providers[i].provider}</a></div>`);
                         // $(".EP2-link yext").prepend(`<img class="EP2-img" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAIAAADZF8uwAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAYdEVYdFNvZnR3YXJlAHBhaW50Lm5ldCA0LjEuM40k/WcAAAF+SURBVChTPY87T9xAFIXn7xGvH7BZEvGwPc4+gKy91mSBgjIpoSOioIiEUqRIlCIIgRQaFAUh0dBQJlRICEUiWTwPz9w7jEHKreZqzrnnO2S+PwqTMoxf31XcWrCPA6Dfbr73F4ZBUvw4vyBSillaeHTcpgXnUmvtFBNVtyjzUzbfzRE1sagrXrcH7Fk2bi30QPE/XE53WWew0ekzpWtrDUEEtPbz4XHg7mXj3b1Pk3sepWWQlFXz5wCAACJa0Eb7c90gHfnpSBj8fX3z7ftPa5STWYtEoWlQ0UolwjQPMtam+d9KOvP/HqQGsG5Hy5WI0qHj9eIh1wa1MU9+J2oMxhoNbboc0WKKMqH05a+rj18PEJ2uCSEOyL2/7B8FLqu3vvNh765SQZw/H6xLhwuqEblcCRBlpUfZ1AuKWN8LObu01oqZv7isH8kIlyJMVrzszUySQ1MVAWAipEcL/9Xqy35RgyHpSulnLKLl7b/qCdMNGPlua9uVDSk7OT17AAK+PGNnA1kxAAAAAElFTkSuQmCC">`);
                     } else if (tempjson.venue.external_providers[i].provider == "ParkMe") {
+                        $(`#EP2-items > div:nth-child(${count}) > span`).replaceWith(`<a href="https://www.parkme.com/lot/${tempjson.venue.external_providers[i].id}" target="_blank">${tempjson.venue.external_providers[i].provider}</a>`);
                         $(`#EP2-items > div:nth-child(${count}) > a`).prepend(`<img class="EP2-img" style="height: 18px;padding: 0px;margin: -2px;" src="https://scontent-ort2-2.xx.fbcdn.net/v/t1.0-1/cp0/p40x40/11781849_848814071840232_8207251348696912842_n.png?_nc_cat=100&ccb=2&_nc_sid=1eb0c7&_nc_ohc=dP4o4TyCiUUAX9eej3x&_nc_ht=scontent-ort2-2.xx&oh=acc62fa3bb6bfa26d39a5529bef53f02&oe=5FE50004">`);
-                        $(`#EP2-items > div:nth-child(${count}) > a`).attr("href",`https://www.parkme.com/lot/${tempjson.venue.external_providers[i].id}`);
                         $(`#EP2-items > div:nth-child(${count}) > a`).attr("target","_blank")[count-1];
-                        $(`#EP2-items > div:nth-child(${count}) > a`).css({cursor:"pointer"})[count-1];
                         $(`#EP2-items > div:nth-child(${count}) > a`).append(`<i class="fa fa-link" style="position: absolute;left: 88%;"></i>`);
                     } else if (tempjson.venue.external_providers[i].provider == "MapFuel" || tempjson.venue.external_providers[i].provider == "OPIS Gas Stations") {
-                        $(`#EP2-items > div:nth-child(${count}) > a`).prepend('<i class="EP2-img-fa fas fa-gas-pump" style="font-size: 14px;"></i> ');
+                        $(`#EP2-items > div:nth-child(${count}) > span`).prepend('<i class="EP2-img-fa fas fa-gas-pump" style="font-size: 14px;"></i> ');
                     } else if (tempjson.venue.external_providers[i].provider == "WazeAds") {
-                        $(`#EP2-items > div:nth-child(${count}) > a`).prepend('<i class="EP2-img-fa fas fa-ad" style="font-size: 14px;"></i> ');
+                        $(`#EP2-items > div:nth-child(${count}) > span`).prepend('<i class="EP2-img-fa fas fa-ad" style="font-size: 14px;"></i> ');
                     } else {
-                        $(`#EP2-items > div:nth-child(${count}) > a`).prepend('<i class="EP2-img-fa fas fa-server" style="font-size: 14px;"></i> ');
+                        $(`#EP2-items > div:nth-child(${count}) > span`).prepend('<i class="EP2-img-fa fas fa-server" style="font-size: 14px;"></i> ');
                     }
                 } i++;
             }
         }
 
-        createTooltip('ep2-tooltip','3rd-Party sources that may share data with Waze. If more information is available, the button can be clicked.');
+        createTooltip('ep2-tooltip',I18n.t(`wmebed.third_party_tooltip`));
 
         $("#EP2-spider").click(function() {
             console.log(venue);
@@ -1746,7 +1829,6 @@
              $.getJSON(link, function(data) {
                 makeModal(venue.name,undefined,data,link)
             });
-
         });
     }
 
@@ -1836,7 +1918,7 @@
 
     function initLayer(){
         initializeSettings();
-        log("Initializing Layer");
+        log("Layer Initialized");
 
         // Add the layer
         _adPinsLayer = new OpenLayers.Layer.Markers("wmeEpdLayerAdPins",{uniqueName: "__wmeEpdLayerAdPins"})
