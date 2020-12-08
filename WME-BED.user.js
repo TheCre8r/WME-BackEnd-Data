@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME BackEnd Data
 // @namespace    https://github.com/thecre8r/
-// @version      2020.12.06.01
+// @version      2020.12.07.01
 // @description  Shows Hidden Attributes, AdPins, and Gas Prices for Applicable Places
 // @include      https://www.waze.com/editor*
 // @include      https://www.waze.com/*/editor*
@@ -31,6 +31,7 @@
 /* global require */
 /* global QRCode */
 /* global Backbone */
+/* global JSONViewer */
 
 (function() {
     'use strict';
@@ -38,7 +39,7 @@
     const SCRIPT_NAME = GM_info.script.name;
     const SCRIPT_VERSION = GM_info.script.version.toString();
     const SCRIPT_CHANGES = `<b>First Complete Translation!</b><br>Spanish has been added thanks to locojd1.<br>Italian fuel price order and names have been corrected thanks to superguru75.<br>If you speak a foreign language, please let me know! I would like help with the translations.`
-    const UPDATE_ALERT = true;
+    const UPDATE_ALERT = false;
     const USER = {name: null, rank:null};
     const SERVER = {name: null};
     const COUNTRY = {id: 0, name: null};
@@ -242,8 +243,9 @@
     function getAds(latlon,venue) {
         let venue_name = getNameParts(venue.name).base;
         venue_name.replace(/\([\w\W]+\)/,'');
-        if (venue_name == "")
+        if (venue_name == "") {
             return;
+        }
         //log(`Requesting Ads for ${venue_name}`)
         console.log(venue)
         if (_settings.ShowRequestPopUp == true || venue.source == "prompt"){
@@ -1145,8 +1147,9 @@
                             }
                             W.selectionManager.setSelectedModels(venueModel)
                             hi(ad_data,marker)
-                            if (_settings.AutoSelectAdTab)
+                            if (_settings.AutoSelectAdTab) {
                                 document.getElementById('advert-tab').click();
+                            }
                         });
                     }
                     if (typeof _ads['badge-' + id] != 'undefined') {
@@ -1156,8 +1159,9 @@
                             }
                             W.selectionManager.setSelectedModels(venueModel)
                             hi(ad_data,marker)
-                            if (_settings.AutoSelectAdTab)
+                            if (_settings.AutoSelectAdTab) {
                                 document.getElementById('advert-tab').click();
+                            }
                         });
                     }
                 }
@@ -1177,7 +1181,7 @@
             let iconClass = 'WMEBED-icon-link-venue';
             let html = '<div class="tx-header"><div class="flex-noshrink" style="width:10%"><div class="flex-noshrink"><span class="fa fa-plus" style="font-size:20px;color:#A1A6AB;"></span></div>'
             + '</div><div class="tx-summary" style="width:100%;">'
-            + '<div class="tx-preview" style="position: relative;top: 50%;transform: translateY(-50%);font-size: 13px;">${I18n.t(`wmebed.create_new_place`)}</div>'
+            + `<div class="tx-preview" style="position: relative;top: 50%;transform: translateY(-50%);font-size: 13px;">${I18n.t('wmebed.create_new_place')}</div>`
             + '</div><div class="flex-noshrink"></div></div>';
             createLink.innerHTML = html;
             listItem.append(createLink);
@@ -1199,8 +1203,9 @@
                         }
                         W.selectionManager.setSelectedModels(venueModel)
                         hi(ad_data,marker)
-                        if (_settings.AutoSelectAdTab)
+                        if (_settings.AutoSelectAdTab) {
                             document.getElementById('advert-tab').click();
+                        }
                     });
                 }
                 if (typeof _ads['badge-' + id] != 'undefined') {
@@ -1210,8 +1215,9 @@
                         }
                         W.selectionManager.setSelectedModels(venueModel)
                         hi(ad_data,marker)
-                        if (_settings.AutoSelectAdTab)
+                        if (_settings.AutoSelectAdTab) {
                             document.getElementById('advert-tab').click();
+                        }
                     });
                 }
             }
@@ -1576,8 +1582,9 @@
             };
 
             let city = W.model.cities.objects[closestMatch.street.cityID].attributes;
-            if (city.name == "")
+            if (city.name == "") {
                 adAddressStreetParts.emptyCity = true;
+            }
             streetAddressParts.cityName = city.name;
             streetAddressParts.stateID = city.stateID;
             let state = W.model.states.objects[city.stateID];
@@ -1695,7 +1702,7 @@
 
                 // Sort Fuel Prices By Country Specifics
                 log("Country: " + COUNTRY.name)
-                if (COUNTRY.name == "United States") {
+                if (COUNTRY.name == "United States" || COUNTRY.name == "Canada") {
                     $("#gas\\.regular").appendTo( "#gas-prices" );
                     $("#gas\\.midgrade").appendTo( "#gas-prices" );
                     $("#gas\\.premium").appendTo( "#gas-prices" );
@@ -1722,7 +1729,7 @@
                         $('#gas-update-time').html(`${I18n.t('edit.updated_on', {time: lastupdatestring})} <a target="_blank" href="https://www.waze.com/user/editor/${lastupdateduser}">${lastupdateduser}</a>`);
                     }
                 } else {
-                    $('#gas-update-time').html(`${I18n.t('edit.updated_on', {time: lastupdatestring})} by Unknown User </a>`);
+                    $('#gas-update-time').html(`${I18n.t('edit.updated_on', {time: lastupdatestring})} Unknown User </a>`);
                 }
             }
         }
