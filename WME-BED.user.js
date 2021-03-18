@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME BackEnd Data
 // @namespace    https://github.com/thecre8r/
-// @version      2020.12.07.01
+// @version      2021.03.18.01
 // @description  Shows Hidden Attributes, AdPins, and Gas Prices for Applicable Places
 // @include      https://www.waze.com/editor*
 // @include      https://www.waze.com/*/editor*
@@ -38,8 +38,8 @@
     const STORE_NAME = "WMEBED_Settings";
     const SCRIPT_NAME = GM_info.script.name;
     const SCRIPT_VERSION = GM_info.script.version.toString();
-    const SCRIPT_CHANGES = `<b>First Complete Translation!</b><br>Spanish has been added thanks to locojd1.<br>Italian fuel price order and names have been corrected thanks to superguru75.<br>If you speak a foreign language, please let me know! I would like help with the translations.`
-    const UPDATE_ALERT = false;
+    const SCRIPT_CHANGES = `More provider icons, fixed some CSS issues, and resolved some more gas station issues.`
+    const UPDATE_ALERT = true;
     const USER = {name: null, rank:null};
     const SERVER = {name: null};
     const COUNTRY = {id: 0, name: null};
@@ -279,12 +279,12 @@
             // formatting
             '#sidepanel-wmebed > div > form > div > div > label {white-space:normal}',
             '.EP2-items {}',
-            '.EP2-link {display: table;height:26px; text-decoration:none cursor: context-menu;background-color:#fff;box-shadow:rgba(0,0,0,.1) 0 2px 7.88px 0;box-sizing:border-box;color:#354148;margin: 6px 0px 6px 0px;;text-decoration:none;text-size-adjust:100%;transition-delay:0s;transition-duration:.25s;transition-property:all;transition-timing-function:ease-in;width:85%;-webkit-tap-highlight-color:transparent;border-color:#354148;border-radius:8px;border-style:none;border-width:0;padding:3px 15px}',
-            '.EP2-link a{display: table-cell;}',
+            '.EP2-link {display: table;height:26px; cursor: context-menu;background-color:#fff;box-shadow:rgba(0,0,0,.1) 0 2px 7.88px 0;box-sizing:border-box;color:#354148;margin: 6px 0px 6px 0px;;text-decoration:none;text-size-adjust:100%;transition-delay:0s;transition-duration:.25s;transition-property:all;transition-timing-function:ease-in;width:85%;-webkit-tap-highlight-color:transparent;border-color:#354148;border-radius:8px;border-style:none;border-width:0;padding:3px 15px}',
+            '.EP2-link a{display: table-cell;text-decoration:none;}',
             '.EP2-link span {display: table-cell;}',
             '.EP2-link a:hover {text-decoration:none;}',
             '.EP2-img {padding-right: 6px;height: 100%;}',
-            '.EP2-img-fa {font-size:11px}',
+            '.EP2-img-fa {margin: -2px 2px 0px -6px; font-size:11px}',
             '.EP2-icon {color: #8c8c8c;margin-left: 4px;}',
             '.EP2-clickable {cursor:pointer;}',
             '#WMEBED-header {margin-bottom:10px;}',
@@ -1600,7 +1600,7 @@
         let latlon = get4326CenterPoint();
         let venue = W.selectionManager.getSelectedFeatures()[0].model.attributes;
         let link = `https://${window.location.hostname + W.Config.search.server}?lon=${latlon.lon}&lat=${latlon.lat}&format=PROTO_JSON_FULL&venue_id=venues.${venue.id}`;
-        if(W.selectionManager.getSelectedFeatures()[0].model.type === "venue") {
+        if(W.selectionManager.getSelectedFeatures()[0].model.type === "venue" && tempjson.venue.product) {
             if (venue.id <= 0 && W.selectionManager.getSelectedFeatures()[0].model.attributes.categories.indexOf("GAS_STATION") >= 0){
                 $('.tabs-container ul').append('<li><a data-toggle="tab" id="gas-tab" href="#venue-gas"><span class="fas fa-gas-pump"></span></a></li>');
 
@@ -1638,10 +1638,12 @@
                 let lastupdate = Math.max(...updatetimes)
                 let lastupdatestring = timeConverter(lastupdate); // October 20, 2020 11:38
                 let lastupdateduser;
-                for (var i = 0; i < tempjson.venue.product.length; i++){
-                    if (tempjson.venue.product[i].last_updated == lastupdate){
-                        lastupdateduser = tempjson.venue.product[i].updated_by;
-                        i=tempjson.venue.product.length
+                if (tempjson.venue.product) {
+                    for (var i = 0; i < tempjson.venue.product.length; i++){
+                        if (tempjson.venue.product[i].last_updated == lastupdate){
+                            lastupdateduser = tempjson.venue.product[i].updated_by;
+                            i=tempjson.venue.product.length
+                        }
                     }
                 }
 
@@ -1701,6 +1703,10 @@
                 }
 
                 // Sort Fuel Prices By Country Specifics
+                if (W.model.countries && W.model.countries.top && typeof W.model.countries.top != 'undefined') {
+                    COUNTRY.id = W.model.countries.top.id;
+                    COUNTRY.name = W.model.countries.getObjectById(COUNTRY.id).name;
+                }
                 log("Country: " + COUNTRY.name)
                 if (COUNTRY.name == "United States" || COUNTRY.name == "Canada") {
                     $("#gas\\.regular").appendTo( "#gas-prices" );
@@ -1719,6 +1725,12 @@
                     $("#gas\\.diesel").appendTo( "#gas-prices" );
                     $("#gas\\.gpl").appendTo( "#gas-prices" );
                     $("#gas\\.gas").appendTo( "#gas-prices" );
+                    var allowed = ["gas.regular", "gas.diesel", "gas.gas", "gas.gpl"];
+                    for (let i = document.querySelector("#gas-prices").childElementCount-1; i >= 0; i--) {
+                     if (!allowed.includes(document.querySelector("#gas-prices").children[i].id)) {
+                         document.querySelector("#gas-prices").children[i].remove()
+                     }
+                    }
                 }
 
                 //Build Last Updated String
@@ -1802,9 +1814,9 @@
                 } else {
                     count++;
                     if (count === 1) {
-                        $("#EP2-items").html(`<div class="EP2-link"><span> ${tempjson.venue.external_providers[i].provider}</span></div>`);
+                        $("#EP2-items").html(`<div class="EP2-link"><span>${tempjson.venue.external_providers[i].provider}</span></div>`);
                     } else {
-                        $("#EP2-items").append(`<div class="EP2-link"><span> ${tempjson.venue.external_providers[i].provider}</span></div>`);
+                        $("#EP2-items").append(`<div class="EP2-link"><span>${tempjson.venue.external_providers[i].provider}</span></div>`);
                     }
                     if (tempjson.venue.external_providers[i].provider.includes("Yext")) {
                         $(`#EP2-items > div:nth-child(${count}) > span`).prepend(`<img class="EP2-img" style="height: 20px;" src="https://www.yext.com/wp-content/themes/yext/img/icons/favicon-seal.png">`)
@@ -1812,15 +1824,20 @@
                         // $(".EP2-link yext").prepend(`<img class="EP2-img" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAIAAADZF8uwAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAYdEVYdFNvZnR3YXJlAHBhaW50Lm5ldCA0LjEuM40k/WcAAAF+SURBVChTPY87T9xAFIXn7xGvH7BZEvGwPc4+gKy91mSBgjIpoSOioIiEUqRIlCIIgRQaFAUh0dBQJlRICEUiWTwPz9w7jEHKreZqzrnnO2S+PwqTMoxf31XcWrCPA6Dfbr73F4ZBUvw4vyBSillaeHTcpgXnUmvtFBNVtyjzUzbfzRE1sagrXrcH7Fk2bi30QPE/XE53WWew0ekzpWtrDUEEtPbz4XHg7mXj3b1Pk3sepWWQlFXz5wCAACJa0Eb7c90gHfnpSBj8fX3z7ftPa5STWYtEoWlQ0UolwjQPMtam+d9KOvP/HqQGsG5Hy5WI0qHj9eIh1wa1MU9+J2oMxhoNbboc0WKKMqH05a+rj18PEJ2uCSEOyL2/7B8FLqu3vvNh765SQZw/H6xLhwuqEblcCRBlpUfZ1AuKWN8LObu01oqZv7isH8kIlyJMVrzszUySQ1MVAWAipEcL/9Xqy35RgyHpSulnLKLl7b/qCdMNGPlua9uVDSk7OT17AAK+PGNnA1kxAAAAAElFTkSuQmCC">`);
                     } else if (tempjson.venue.external_providers[i].provider == "ParkMe") {
                         $(`#EP2-items > div:nth-child(${count}) > span`).replaceWith(`<a href="https://www.parkme.com/lot/${tempjson.venue.external_providers[i].id}" target="_blank">${tempjson.venue.external_providers[i].provider}</a>`);
-                        $(`#EP2-items > div:nth-child(${count}) > a`).prepend(`<img class="EP2-img" style="height: 18px;padding: 0px;margin: -2px;" src="https://scontent-ort2-2.xx.fbcdn.net/v/t1.0-1/cp0/p40x40/11781849_848814071840232_8207251348696912842_n.png?_nc_cat=100&ccb=2&_nc_sid=1eb0c7&_nc_ohc=dP4o4TyCiUUAX9eej3x&_nc_ht=scontent-ort2-2.xx&oh=acc62fa3bb6bfa26d39a5529bef53f02&oe=5FE50004">`);
+                        $(`#EP2-items > div:nth-child(${count}) > a`).prepend(`<img class="EP2-img" style="height: 18px;padding: 0px;margin: -2px 2px 0px -6px;" src="https://raw.githubusercontent.com/TheCre8r/WME-BackEnd-Data/master/images/ParkMe.png">`);
                         $(`#EP2-items > div:nth-child(${count}) > a`).attr("target","_blank")[count-1];
                         $(`#EP2-items > div:nth-child(${count}) > a`).append(`<i class="fa fa-link" style="position: absolute;left: 88%;"></i>`);
-                    } else if (tempjson.venue.external_providers[i].provider == "MapFuel" || tempjson.venue.external_providers[i].provider == "OPIS Gas Stations") {
+                    } else if (tempjson.venue.external_providers[i].provider == "MapFuel" || tempjson.venue.external_providers[i].provider == "OPIS Gas Stations" || tempjson.venue.external_providers[i].provider == "FuelIL") {
                         $(`#EP2-items > div:nth-child(${count}) > span`).prepend('<i class="EP2-img-fa fas fa-gas-pump" style="font-size: 14px;"></i> ');
+                    } else if (tempjson.venue.external_providers[i].provider == "ESSO") {
+                        $(`#EP2-items > div:nth-child(${count}) > span`).prepend(`<img src="https://upload.wikimedia.org/wikipedia/commons/2/22/Esso_textlogo.svg" style="height: 18px;padding: 0px;margin: 0px -3px 0px -7px;">`);
                     } else if (tempjson.venue.external_providers[i].provider == "WazeAds") {
                         $(`#EP2-items > div:nth-child(${count}) > span`).prepend('<i class="EP2-img-fa fas fa-ad" style="font-size: 14px;"></i> ');
                     } else {
                         $(`#EP2-items > div:nth-child(${count}) > span`).prepend('<i class="EP2-img-fa fas fa-server" style="font-size: 14px;"></i> ');
+                    }
+                    if (_settings.Debug == true) {
+                        $(`#EP2-items > div:nth-child(${count}) > span`).append(`<span style="color: #8c8c8c;font-size: 10px;display: inline;"">, ${tempjson.venue.external_providers[i].id}</span>`)
                     }
                 } i++;
             }
