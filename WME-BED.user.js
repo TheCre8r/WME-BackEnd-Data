@@ -804,7 +804,7 @@
         let logo = ad_data.l
         let id = ad_data.v
         let adpinPt=new OpenLayers.Geometry.Point(x,y);
-        adpinPt.transform(W.map.displayProjection, W.map.getProjectionObject());
+        adpinPt.transform(W.map.getOLMap().displayProjection, W.map.getProjectionObject());
 
         let image = {h: null, w:null};
         image.h = 130/2;
@@ -1110,7 +1110,7 @@
                 venueLink.innerHTML = html;
                 listItem.append(venueLink);
                 let adPoint = new OpenLayers.Geometry.Point(ad_data.x, ad_data.y);
-                adPoint.transform(W.map.displayProjection, W.map.getProjectionObject());
+                adPoint.transform(W.map.getOLMap().displayProjection, W.map.getProjectionObject());
 
                 let lsLine1 = new OpenLayers.Geometry.LineString([adPoint, venue.geometry]);
 
@@ -1264,7 +1264,7 @@
             if (!W.model.venues.objects[venueID].outOfScope) {
                 let venue = W.model.venues.objects[venueID].attributes;
                 let point = new OpenLayers.Geometry.Point(ad_data.x, ad_data.y);
-                point.transform(W.map.displayProjection, W.map.getProjectionObject());
+                point.transform(W.map.getOLMap().displayProjection, W.map.getProjectionObject());
                 let distanceFromAdPin = venue.geometry.distanceTo(point);
                 let houseNumber = venue.houseNumber;
                 if (houseNumber == null) {
@@ -1332,7 +1332,7 @@
         let landmark = new wazefeatureVectorLandmark();
         let offset_y = ad_data.y - 0.00005;
         let point = new OpenLayers.Geometry.Point(ad_data.x, offset_y);
-        point.transform(W.map.displayProjection, W.map.getProjectionObject());
+        point.transform(W.map.getOLMap().displayProjection, W.map.getProjectionObject());
         landmark.geometry = point;
         landmark.attributes.name = ad_data.name;
 
