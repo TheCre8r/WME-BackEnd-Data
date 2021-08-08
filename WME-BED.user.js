@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME BackEnd Data
 // @namespace    https://github.com/thecre8r/
-// @version      2021.08.02.00
+// @version      2021.08.08.00
 // @description  Shows Hidden Attributes, AdPins, and Gas Prices for Applicable Places
 // @include      https://www.waze.com/editor*
 // @include      https://www.waze.com/*/editor*
@@ -38,7 +38,7 @@
     const STORE_NAME = "WMEBED_Settings";
     const SCRIPT_NAME = GM_info.script.name;
     const SCRIPT_VERSION = GM_info.script.version.toString();
-    const SCRIPT_CHANGES = `More provider icons, fixed some CSS issues, and resolved some more gas station issues.`
+    const SCRIPT_CHANGES = `French language added.`
     const UPDATE_ALERT = true;
     const USER = {name: null, rank:null};
     const SERVER = {name: null};
