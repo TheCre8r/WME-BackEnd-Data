@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME BackEnd Data
 // @namespace    https://github.com/thecre8r/
-// @version      2021.08.02.00
+// @version      2021.08.08.00
 // @description  Shows Hidden Attributes, AdPins, and Gas Prices for Applicable Places
 // @include      https://www.waze.com/editor*
 // @include      https://www.waze.com/*/editor*
@@ -38,7 +38,7 @@
     const STORE_NAME = "WMEBED_Settings";
     const SCRIPT_NAME = GM_info.script.name;
     const SCRIPT_VERSION = GM_info.script.version.toString();
-    const SCRIPT_CHANGES = `More provider icons, fixed some CSS issues, and resolved some more gas station issues.`
+    const SCRIPT_CHANGES = `French language added.`
     const UPDATE_ALERT = true;
     const USER = {name: null, rank:null};
     const SERVER = {name: null};
@@ -442,7 +442,49 @@
                     gpl: 'GPL',
                     gas: 'Metano'
                 },
-            }
+            },
+            fr: {
+                tab_title: `${SCRIPT_NAME}`,
+                settings_1: 'Activer le mode débogage',
+                settings_2: 'Ouvrir l\'onglet Publicité quand une publicité est sélectionnée',
+                settings_3: 'Ouvrir un pop-up lors de la recherche',
+                settings_4: 'Centrer la publicité au clic',
+                search_for_ads: 'Rechercher une pub',
+                by_name: 'Par nom',
+                on_screen: 'A l\'écran',
+                clear_ad_pins: 'Effacer le Pin Publicitaire',
+                report_an_issue: 'Signaler un problème sur GitHub',
+                help: 'Aide',
+                gas_prices: 'Prix carburants',
+                popup_request: 'Veuillez entrer le nom de la publicité demandée',
+                invalid_gas: `Pourquoi pensez-vous qu\'il y a déjà des prix de l'essence ? Vous n\'avez même pas encore sauvegardé le lieu.`,
+                autocomplete_address: `Remplir automatiquement l\'adresse`,
+                ad_pin_alert: `CE LIEU FAIT L\'OBJET D\'UNE ANNONCE. VEUILLEZ UTILISER LE LIEN CI-DESSOUS POUR SIGNALER UNE ERREUR D'AFFICHAGE.`,
+                ad_address_tooltip: `L\'adresse telle qu\'elle est affichée dans l\'autocomplétion de recherche lors d\'une recherche dans l\'app Waze. Les lieux liés afficheront l\'adresse du lieu Waze au lieu de l\'adresse sur l\'épingle de l\'annonce.`,
+                select_nearby: `Sélectionnez un lieu Waze proche`,
+                create_new_place: `Créer un nouveau lieu sur la publicité`,
+                open_in_waze: `Ouvrir dans l\'app Waze`,
+                ad_open_tooltip: `Tentative d\'ouverture de la pub dans l\'app Waze`,
+                gas_price_reminder: `Rappel:\nLes prix des carburants ne peuvent pas être mis à jour dans WME.\nNe signalez pas une erreur de prix.`,
+                read_only: `Lecture seulement`,
+                third_party_tooltip: `Les sources tierces qui peuvent partager des données avec Waze. Si plus d'informations sont disponibles, le bouton est cliquable.`,
+                gas: {
+                    regular: 'Essence',
+                    regularself: 'Essence (Self)',
+                    diesel: 'Gasoil',
+                    midgrade: 'Intermédiaire',
+                    premium: 'Premium',
+                    lpg: 'LPG',
+                    gpl: 'GPL',
+                    gas: 'Gaz naturel'
+                },
+                areas: {
+                    US: 'Etats-Unis'
+                },
+                update: {
+                    message: '',
+                    v0_0_0_0: ''
+                }
         };
         translations['en-GB'] = translations['en-US'] = translations['en-AU'] = translations.en;
         translations['es-419'] = translations.es;
