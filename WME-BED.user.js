@@ -485,7 +485,7 @@
                     message: '',
                     v0_0_0_0: ''
                 }
-        };
+        }};
         translations['en-GB'] = translations['en-US'] = translations['en-AU'] = translations.en;
         translations['es-419'] = translations.es;
         I18n.translations[I18n.currentLocale()].wmebed = translations.en;
