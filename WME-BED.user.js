@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME BackEnd Data
 // @namespace    https://github.com/thecre8r/
-// @version      2021.08.08.01
+// @version      2021.09.29.01
 // @description  Shows Hidden Attributes, AdPins, and Gas Prices for Applicable Places
 // @include      https://www.waze.com/editor*
 // @include      https://www.waze.com/*/editor*
@@ -120,12 +120,12 @@
             document.getElementsByName('correct_gps_coordinates')[0].value = getUrlParameter('correct_gps_coordinates');
             document.getElementsByName('description')[1].value = getUrlParameter('description');
             if (getUrlParameter('p1') == 'true') {
-                document.querySelector('#misplaced_ad_pins > div:nth-child(9) > fieldset > div:nth-child(3) > label > label').click()
+                document.querySelector('#misplaced_ad_pins > div:nth-child(10) > fieldset > div:nth-child(3) > div > label').click()
             }
             else if (getUrlParameter('p2') == 'true') {
-                document.querySelector('#misplaced_ad_pins > div:nth-child(9) > fieldset > div:nth-child(3) > label > label').click()
+                document.querySelector('#misplaced_ad_pins > div:nth-child(10) > fieldset > div:nth-child(3) > div > label').click()
             }
-            $("#misplaced_ad_pins > div:nth-child(16) > fieldset > div:nth-child(3) > label > label > div.material-radio__circle").click()
+            $("#misplaced_ad_pins > div:nth-child(17) > fieldset > div:nth-child(3) > div > label > div.material-radio__circle").click()
             let addressLabel;
             let addressID = document.getElementsByName('pin_address')[0].id;
             for (let i=0;i<document.getElementsByTagName('label').length;i++) {
