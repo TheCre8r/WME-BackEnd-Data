@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME BackEnd Data
 // @namespace    https://github.com/thecre8r/
-// @version      2021.09.29.01
+// @version      2022.01.17.01
 // @description  Shows Hidden Attributes, AdPins, and Gas Prices for Applicable Places
 // @include      https://www.waze.com/editor*
 // @include      https://www.waze.com/*/editor*
@@ -38,7 +38,7 @@
     const STORE_NAME = "WMEBED_Settings";
     const SCRIPT_NAME = GM_info.script.name;
     const SCRIPT_VERSION = GM_info.script.version.toString();
-    const SCRIPT_CHANGES = `French language added.`
+    const SCRIPT_CHANGES = `WME Compatability Update - fix missing gas prices tab.`
     const UPDATE_ALERT = true;
     const USER = {name: null, rank:null};
     const SERVER = {name: null};
@@ -1668,7 +1668,7 @@
                     `</div>`+
                     `</form>`+
                     `</div>`;
-                $(document.querySelector('#edit-panel > div > div > div > div.tab-content')).append(htmlstring);
+                $('.venue').find('.tab-content').append(htmlstring);
             } else if (bypass == true || W.selectionManager.getSelectedFeatures()[0].model.attributes.categories.indexOf("GAS_STATION") >= 0){
                 console.log(tempjson);
 
@@ -1715,7 +1715,7 @@
                     `</div>`+
                     `</form>`+
                     `</div>`;
-                $(document.querySelector('#edit-panel > div > div > div > div.tab-content')).append(htmlstring);
+                $('.venue').find('.tab-content').append(htmlstring);
                 $("#EP2-bug").click(function() {
                     $.getJSON(link, function(data) {
                         makeModal(venue.name,undefined,data,link)
