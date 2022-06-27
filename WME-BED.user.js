@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME BackEnd Data
 // @namespace    https://github.com/thecre8r/
-// @version      2022.01.17.01
+// @version      2022.06.27.01
 // @description  Shows Hidden Attributes, AdPins, and Gas Prices for Applicable Places
 // @include      https://www.waze.com/editor*
 // @include      https://www.waze.com/*/editor*
@@ -38,7 +38,7 @@
     const STORE_NAME = "WMEBED_Settings";
     const SCRIPT_NAME = GM_info.script.name;
     const SCRIPT_VERSION = GM_info.script.version.toString();
-    const SCRIPT_CHANGES = `WME Compatability Update - fix missing gas prices tab.`
+    const SCRIPT_CHANGES = `WME Compatability Update`
     const UPDATE_ALERT = true;
     const USER = {name: null, rank:null};
     const SERVER = {name: null};
@@ -1831,8 +1831,7 @@
 
 
 
-        let spot = $('#venue-edit-general > form > div').length - 1;
-        $('#venue-edit-general > form > div:nth-child('+spot+')').after($EP2);
+        $('#venue-edit-general > .external-providers-control').after($EP2);
         log("Button Added");
 
         if (!venue.name.includes("Parking  -") && !venue.name.includes("Parking -") && !venue.name.includes("Lot -") && !venue.name.includes("(copy)") ) {
@@ -2012,7 +2011,7 @@
                     let addedNode = mutation.addedNodes[i];
                     // Only fire up if it's a node
                     //log("Observer Running "+ $(addedNode).attr('class'));
-                    if (addedNode.nodeType === Node.ELEMENT_NODE && !$('#ExternalProviders2').length && addedNode.querySelector('div.external-providers-view') && WazeWrap.hasPlaceSelected()) {
+                    if (addedNode.nodeType === Node.ELEMENT_NODE && !$('#ExternalProviders2').length && addedNode.querySelector('div.external-providers-control') && WazeWrap.hasPlaceSelected()) {
                         //if (addedNode.nodeType === Node.ELEMENT_NODE && !$('#ExternalProviders2').length && WazeWrap.hasPlaceSelected()) {
                         insertExternalProviders2()
                         //log("Loaded insertExternalProviders2 "+ $(addedNode).attr('class'));
