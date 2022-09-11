@@ -23,7 +23,7 @@ https://github.com/TheCre8r/WME-BackEnd-Data/raw/master/WME-BED.user.js
 * **The_Cre8r**
 * **jm6087** - *Compatibility Updates*
 * **ABelter** - *Compatibility Updates*
-* **Lulucmy** - *French Translation*
+* **[Lulucmy](https://github.com/Lulucmy)** - *French Translation*
 
 ## Thanks
 
@@ -36,7 +36,7 @@ https://github.com/TheCre8r/WME-BackEnd-Data/raw/master/WME-BED.user.js
 **ROW Server Beta Testers**
 * **carloslaso**
 * **Dude495**
-* **WimVandierendonck**
+* **[WimVandierendonck]**
 
 **Additional Beta Testers:**
 * **dfortney**
@@ -47,3 +47,8 @@ https://github.com/TheCre8r/WME-BackEnd-Data/raw/master/WME-BED.user.js
 
 ## License
 
+## Notices
+
+Certain functions in this script are provided by:
+
+[Andrei Mackenzie](https://gist.github.com/andrei-m) licesed under the MIT License - Copyright (c) 2011
