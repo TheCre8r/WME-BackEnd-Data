@@ -36,7 +36,7 @@ https://github.com/TheCre8r/WME-BackEnd-Data/raw/master/WME-BED.user.js
 **ROW Server Beta Testers**
 * **carloslaso**
 * **Dude495**
-* **[WimVandierendonck]**
+* **[WimVandierendonck](https://github.com/WimVandierendonck)**
 
 **Additional Beta Testers:**
 * **dfortney**
