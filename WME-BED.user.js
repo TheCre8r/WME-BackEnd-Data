@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME BackEnd Data
 // @namespace    https://github.com/thecre8r/
-// @version      2023.03.17.01
+// @version      2023.07.16.01
 // @description  Shows Hidden Attributes, AdPins, and Gas Prices for Applicable Places
 // @match        https://www.waze.com/editor*
 // @match        https://www.waze.com/*/editor*
@@ -937,7 +937,7 @@
                 !value ? value : "on"
                 return `<wz-checkbox id="${id}" disabled="${disabled}" value="${value}">${text}</wz-checkbox>`
             }
-            document.querySelector("#sidepanel-wmebed > div > form > div:nth-child(1)").insertAdjacentHTML('afterbegin', MakeCheckBox('WMEBED-Debug',I18n.t('wmebed.settings_1'),''));
+            document.querySelector("#WMEBED-AutoSelectAdTab").insertAdjacentHTML('beforebegin', MakeCheckBox('WMEBED-Debug',I18n.t('wmebed.settings_1'),''));
             setChecked('Debug', _settings.Debug);
         }
 
@@ -1099,7 +1099,8 @@
             }
             if (color == "white" || color == "grey"){
                 let venue_id = [ad_data.v.replace("venues.","")];
-                if (!W.selectionManager.hasSelectedFeatures() || (venue_id[0] !== W.selectionManager.getSelectedFeatures()[0].model.attributes.id)){
+                if (!W.selectionManager.hasSelectedFeatures() || (venue_id[0] !== W.selectionManager.getSelectedFeatures()[0].WW.getAttributes().id)){
+//                if (!W.selectionManager.hasSelectedFeatures() || (venue_id[0] !== W.selectionManager.getSelectedFeatures()[0].model.attributes.id)){
                     let venue = W.model.venues.getObjectById(venue_id)
                     if (venue == null) {
                          WazeWrap.Alerts.error(GM_info.script.name, "Zoom in to select this place.");
@@ -1116,7 +1117,8 @@
                             }, 500);
                         }
                     }
-                } else if (venue_id[0] == W.selectionManager.getSelectedFeatures()[0].model.attributes.id) {
+                } else if (venue_id[0] == W.selectionManager.getSelectedFeatures()[0].WW.getAttributes().id) {
+//                } else if (venue_id[0] == W.selectionManager.getSelectedFeatures()[0].model.attributes.id) {
                     try {
                         findTab("Ad-Pin").click()
                     } catch (error) {
@@ -1229,7 +1231,8 @@
             //wmeMarkers.addMarker(new OpenLayers.Marker(new OpenLayers.LonLat(W.map.getCenter().lon,W.map.getCenter().lat+20),icon.clone()));
             log(`Ad Created for ${ad_data.name} at ${ad_data.a} (${ad_data.y},${ad_data.x})`,1)
         } else {
-            if ("venues." + W.selectionManager.getSelectedFeatures()[0].model.attributes.id.toString() == id){
+            if ("venues." + W.selectionManager.getSelectedFeatures()[0].WW.getAttributes().id.toString() == id){
+//            if ("venues." + W.selectionManager.getSelectedFeatures()[0].model.attributes.id.toString() == id){
                 processAdData(ad_data,marker) //adds ad tab to sidebar if marker already exists
             }
             log(`Ad Already Created`)
@@ -1310,15 +1313,21 @@
         }
 
         if (W.selectionManager.getSelectedFeatures().length > 0) {
-            venueModel = W.selectionManager.getSelectedFeatures()[0].model.attributes;
+            venueModel = W.selectionManager.getSelectedFeatures()[0].WW.getAttributes();
+//            venueModel = W.selectionManager.getSelectedFeatures()[0].model.attributes;
             isVenueSelected = true;
-            if (W.selectionManager.getSelectedFeatures()[0].model.attributes.geometry.x && W.selectionManager.getSelectedFeatures()[0].model.attributes.geometry.y){
-                selectedvenue = WazeWrap.Geometry.ConvertTo4326(W.selectionManager.getSelectedFeatures()[0].model.attributes.geometry.x,W.selectionManager.getSelectedFeatures()[0].model.attributes.geometry.y)
-            } else if (W.selectionManager.getSelectedFeatures()[0].model.attributes.geometry.bounds) {
-                let bounds = W.selectionManager.getSelectedFeatures()[0].model.attributes.geometry.bounds
+            if (W.selectionManager.getSelectedFeatures()[0].WW.getAttributes().geometry.x && W.selectionManager.getSelectedFeatures()[0].WW.getAttributes().geometry.y){
+                selectedvenue = WazeWrap.Geometry.ConvertTo4326(W.selectionManager.getSelectedFeatures()[0].WW.getAttributes().geometry.x,W.selectionManager.getSelectedFeatures()[0].WW.getAttributes().geometry.y)
+            } else if (W.selectionManager.getSelectedFeatures()[0].WW.getAttributes().geometry.bounds) {
+                let bounds = W.selectionManager.getSelectedFeatures()[0].WW.getAttributes().geometry.bounds
+//            if (W.selectionManager.getSelectedFeatures()[0].model.attributes.geometry.x && W.selectionManager.getSelectedFeatures()[0].model.attributes.geometry.y){
+//                selectedvenue = WazeWrap.Geometry.ConvertTo4326(W.selectionManager.getSelectedFeatures()[0].model.attributes.geometry.x,W.selectionManager.getSelectedFeatures()[0].model.attributes.geometry.y)
+//            } else if (W.selectionManager.getSelectedFeatures()[0].model.attributes.geometry.bounds) {
+//                let bounds = W.selectionManager.getSelectedFeatures()[0].model.attributes.geometry.bounds
                 selectedvenue = WazeWrap.Geometry.ConvertTo4326((bounds.left + bounds.right) / 2,(bounds.top + bounds.bottom) / 2)
             } else {
-                let tempVenue = W.model.venues.getObjectById(W.selectionManager.getSelectedFeatures()[0].model.attributes.id)
+                let tempVenue = W.model.venues.getObjectById(W.selectionManager.getSelectedFeatures()[0].WW.getAttributes().id)
+//                let tempVenue = W.model.venues.getObjectById(W.selectionManager.getSelectedFeatures()[0].model.attributes.id)
                 W.selectionManager.unselectAll()
                 W.selectionManager.setSelectedModels(tempVenue)
                 log("Retrying to process Ads")
@@ -1395,7 +1404,8 @@
         ].join(' ');
         console.log(ad_data)
         if (W.selectionManager.getSelectedFeatures().length > 0 &&
-           W.selectionManager.getSelectedFeatures()[0].model.type === "venue"
+           W.selectionManager.getSelectedDataModelObjects()[0].type === "venue"
+//           W.selectionManager.getSelectedFeatures()[0].model.type === "venue"
            && !document.querySelector("wz-tab.venue-edit-tab-ad") &&
            ad_data.v.indexOf('advertisement') < 0 &&
            ad_data.v.indexOf('googlePlaces')) {
@@ -1407,7 +1417,8 @@
                 makeModal(ad_data.name,undefined,ad_data,"GAPI",`https://gapi.waze.com/autocomplete/q?e=${getAdServer()}&c=wd&sll=${lonlat.lat},${lonlat.lon}&s&q=${ad_data.name}&gxy=1`)
             });
             createTooltip('EP2-code',"WME");
-            if (W.selectionManager.getSelectedFeatures()[0].model.attributes.id.toString().startsWith('-')) {
+            if (W.selectionManager.getSelectedFeatures()[0].WW.getAttributes().id.toString().startsWith('-')) {
+//            if (W.selectionManager.getSelectedFeatures()[0].model.attributes.id.toString().startsWith('-')) {
                 let formLink = document.getElementById('bedFormLink');
                 formLink.onclick = function() {
                     alert('New place must be saved before linking through the report form!');
@@ -1542,7 +1553,8 @@
             listItem.append(createLink);
             createLink.onclick = function() {
                 createPlace(ad_data, marker)
-                let venue_id = W.selectionManager.getSelectedFeatures()[0].model.attributes.id.toString();
+                let venue_id = W.selectionManager.getSelectedFeatures()[0].WW.getAttributes().id.toString();
+//                let venue_id = W.selectionManager.getSelectedFeatures()[0].model.attributes.id.toString();
                 let venueModel = W.model.venues.objects[venue_id];
             }
 
@@ -1936,7 +1948,8 @@
 
     function gasprices(json,bypass){
         let latlon = get4326CenterPoint();
-        let venue = W.selectionManager.getSelectedFeatures()[0].model.attributes;
+        let venue = W.selectionManager.getSelectedFeatures()[0].WW.getAttributes();
+//        let venue = W.selectionManager.getSelectedFeatures()[0].model.attributes;
         let link = `https://${window.location.hostname + W.Config.search.server}?lon=${latlon.lon}&lat=${latlon.lat}&format=PROTO_JSON_FULL&venue_id=venues.${venue.id}`;
         let htmlstring = [
                 `<form class="attributes-form">`,
@@ -2152,7 +2165,8 @@
             return
         }
         let latlon = get4326CenterPoint();
-        let venue = W.selectionManager.getSelectedFeatures()[0].model.attributes;
+        let venue = W.selectionManager.getSelectedFeatures()[0].WW.getAttributes();
+//        let venue = W.selectionManager.getSelectedFeatures()[0].model.attributes;
         let link = `https://${window.location.hostname + W.Config.search.server}?lon=${latlon.lon}&lat=${latlon.lat}&format=PROTO_JSON_FULL&venue_id=venues.${venue.id}`;
         let searchServerJSON;
 
@@ -2263,7 +2277,8 @@
                 `</wz-list>`,
             `</div>`
             ].join(' ');
-        if (W.selectionManager.getSelectedFeatures()[0].model.attributes.categories.indexOf("GAS_STATION") >= 0) {
+        if (W.selectionManager.getSelectedFeatures()[0].WW.getAttributes().categories.indexOf("GAS_STATION") >= 0) {
+//        if (W.selectionManager.getSelectedFeatures()[0].model.attributes.categories.indexOf("GAS_STATION") >= 0) {
             function bootstrapGas(tries = 1) {
                 if (document.querySelector("wz-tabs") == null && tries < 5) {
                     setTimeout(() => bootstrapGas(tries++), 1000);
@@ -2279,11 +2294,13 @@
             }
             //makeTab("Gas","tab-gas","<div id='venue-gas'></div>")
             //gasprices(searchServerJSON);
-        } else if (W.selectionManager.getSelectedFeatures()[0].model.attributes.categories.indexOf("PARKING_LOT") >= 0 && searchServerJSON.venue.parking_lot_attributes.numberOfSpots) {
+        } else if (W.selectionManager.getSelectedFeatures()[0].WW.getAttributes().categories.indexOf("PARKING_LOT") >= 0 && searchServerJSON.venue.parking_lot_attributes.numberOfSpots) {
+//        } else if (W.selectionManager.getSelectedFeatures()[0].model.attributes.categories.indexOf("PARKING_LOT") >= 0 && searchServerJSON.venue.parking_lot_attributes.numberOfSpots) {
             processParkingLotData(searchServerJSON);
         }
 
-        if (W.selectionManager.getSelectedFeatures()[0].model.arePropertiesEditable()) {
+        if (W.selectionManager.getSelectedFeatures()[0].attributes.wazeFeature._wmeObject.arePropertiesEditable()) {
+//        if (W.selectionManager.getSelectedFeatures()[0].model.arePropertiesEditable()) {
             $('#venue-edit-general > .external-providers-control').after(EP2html);
         } else {
             $('#venue-edit-general > .geometry-type-control').after(EP2html);
@@ -2310,7 +2327,8 @@
             switch (searchServerJSON.venue.external_providers[i].provider) {
                 case "Google":
                     //https://developers.google.com/maps/documentation/places/web-service/place-id
-                    if (!W.selectionManager.getSelectedFeatures()[0].model.arePropertiesEditable()) {
+                    if (!W.selectionManager.getSelectedFeatures()[0].attributes.wazeFeature._wmeObject.arePropertiesEditable()) {
+//                    if (!W.selectionManager.getSelectedFeatures()[0].model.arePropertiesEditable()) {
                         newEPItem("Google","",'<i class="EP2-img-fa fa fa-google" style="font-size: 14px;"></i>',false,searchServerJSON.venue.external_providers[i].i)
                         break;
                     }
