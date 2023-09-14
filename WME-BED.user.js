@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME BackEnd Data
 // @namespace    https://github.com/thecre8r/
-// @version      2023.07.16.01
+// @version      2023.09.14.01
 // @description  Shows Hidden Attributes, AdPins, and Gas Prices for Applicable Places
 // @match        https://www.waze.com/editor*
 // @match        https://www.waze.com/*/editor*
@@ -716,8 +716,8 @@
         USER.rank = W.loginManager.user.rank + 1;
         SERVER.name = W.app.getAppRegionCode();
         if (W.model.countries && W.model.countries.top && typeof W.model.countries.top != 'undefined') {
-            COUNTRY.id = W.model.countries.top.id;
-            COUNTRY.name = W.model.countries.getObjectById(COUNTRY.id).name;
+            COUNTRY.id = W.model.countries.top.attributes.id;
+            COUNTRY.name = W.model.countries.getObjectById(COUNTRY.id).attributes.name;
         }
         function MakeCheckBox(id,text,value,disabled) {
             if (disabled == undefined) {
@@ -2025,8 +2025,8 @@
 
             // Sort Fuel Prices By Country Specifics
             if (W.model.countries && W.model.countries.top && typeof W.model.countries.top != 'undefined') {
-                COUNTRY.id = W.model.countries.top.id;
-                COUNTRY.name = W.model.countries.getObjectById(COUNTRY.id).name;
+                COUNTRY.id = W.model.countries.top.attributes.id;
+                COUNTRY.name = W.model.countries.getObjectById(COUNTRY.id).attributes.name;
             }
             log("Country: " + COUNTRY.name,0)
             if (COUNTRY.name == "United States" || COUNTRY.name == "Canada") {
