@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME BackEnd Data
 // @namespace    https://github.com/thecre8r/
-// @version      2023.09.14.01
+// @version      2023.09.15.01
 // @description  Shows Hidden Attributes, AdPins, and Gas Prices for Applicable Places
 // @match        https://www.waze.com/editor*
 // @match        https://www.waze.com/*/editor*
@@ -712,8 +712,8 @@
     function initTab() {
 
         let $section = $("<div>");
-        USER.name = W.loginManager.user.userName.toString();
-        USER.rank = W.loginManager.user.rank + 1;
+        USER.name = W.loginManager.user.attributes.userName.toString();
+        USER.rank = W.loginManager.user.attributes.rank + 1;
         SERVER.name = W.app.getAppRegionCode();
         if (W.model.countries && W.model.countries.top && typeof W.model.countries.top != 'undefined') {
             COUNTRY.id = W.model.countries.top.attributes.id;
