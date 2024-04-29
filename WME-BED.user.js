@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME BackEnd Data
 // @namespace    https://github.com/thecre8r/
-// @version      2023.09.15.01
+// @version      2024.04.28.01
 // @description  Shows Hidden Attributes, AdPins, and Gas Prices for Applicable Places
 // @match        https://www.waze.com/editor*
 // @match        https://www.waze.com/*/editor*
@@ -40,7 +40,7 @@
     const SCRIPT_NAME = GM_info.script.name;
     const SCRIPT_VERSION = GM_info.script.version.toString();
     //{"version": "2022.01.01.01","changes": "Insert Changes Here"},
-    const SCRIPT_HISTORY = `{"versions": [{"version": "2023.03.17.01","changes": "Major code rewrite and compatibility updates."}]}`;
+    const SCRIPT_HISTORY = `{"versions": [{"version": "2024.04.28.01","changes": "Update to get gas tab and feed links to show again."}]}`;
     const GH = {link: 'https://github.com/TheCre8r/WME-BackEnd-Data/', issue: 'https://github.com/TheCre8r/WME-BackEnd-Data/issues/new', wiki: 'https://github.com/TheCre8r/WME-BackEnd-Data/wiki'};
     const UPDATE_ALERT = true;
     const USER = {name: null, rank:null};
@@ -715,8 +715,8 @@
         USER.name = W.loginManager.user.attributes.userName.toString();
         USER.rank = W.loginManager.user.attributes.rank + 1;
         SERVER.name = W.app.getAppRegionCode();
-        if (W.model.countries && W.model.countries.top && typeof W.model.countries.top != 'undefined') {
-            COUNTRY.id = W.model.countries.top.attributes.id;
+        if (W.model.countries && W.model.getTopCountry()&& typeof W.model.getTopCountry() != 'undefined') {
+            COUNTRY.id = W.model.getTopCountry().attributes.id;
             COUNTRY.name = W.model.countries.getObjectById(COUNTRY.id).attributes.name;
         }
         function MakeCheckBox(id,text,value,disabled) {
@@ -2024,8 +2024,8 @@
             }
 
             // Sort Fuel Prices By Country Specifics
-            if (W.model.countries && W.model.countries.top && typeof W.model.countries.top != 'undefined') {
-                COUNTRY.id = W.model.countries.top.attributes.id;
+            if (W.model.countries && W.model.getTopCountry() && typeof W.model.getTopCountry() != 'undefined') {
+                COUNTRY.id = W.model.getTopCountry().attributes.id;
                 COUNTRY.name = W.model.countries.getObjectById(COUNTRY.id).attributes.name;
             }
             log("Country: " + COUNTRY.name,0)
@@ -2175,7 +2175,8 @@
                 '<i class="w-icon fa fa-qrcode" style="font-size: 20px;padding: 2px;"></i>Generate QR Code',
             '</wz-menu-item>'
             ].join(' ');
-        document.querySelector("#edit-panel wz-menu").insertAdjacentHTML("beforeend",generateQRcodeHTML)
+//        document.querySelector("#edit-panel wz-menu").insertAdjacentHTML("beforeend",generateQRcodeHTML)
+        document.querySelector("#edit-panel > div > div.venue-feature-editor > div > wz-section-header > span > div").insertAdjacentHTML("beforeend",generateQRcodeHTML)
         $("#wmebed-qr-popup-button").click(function() {
             let htmlstring = [
                 '<div class="panel show">',
@@ -2208,7 +2209,8 @@
                 '<i class="w-icon w-icon-copy"></i>Copy livemap link to clipboard',
             '</wz-menu-item>'
         ].join(' ');
-        document.querySelector("#edit-panel wz-menu").insertAdjacentHTML("beforeend",copyLivemapLinkHTML)
+//        document.querySelector("#edit-panel wz-menu").insertAdjacentHTML("beforeend",copyLivemapLinkHTML)
+        document.querySelector("#edit-panel > div > div.venue-feature-editor > div > wz-section-header > span > div").insertAdjacentHTML("beforeend",copyLivemapLinkHTML)
         $("#wmebed-copy-lmlink-button").click(function() {
             navigator.clipboard.writeText(`https://ul.waze.com/ul?preview_venue_id=${venue.id}&navigate=yes&utm_medium=send_to_phone_QR`)
             WazeWrap.Alerts.info(GM_info.script.name, 'Livemap link copied to clipboard');
@@ -2299,7 +2301,8 @@
             processParkingLotData(searchServerJSON);
         }
 
-        if (W.selectionManager.getSelectedFeatures()[0].attributes.wazeFeature._wmeObject.arePropertiesEditable()) {
+//        if (W.selectionManager.getSelectedFeatures()[0].attributes.wazeFeature._wmeObject.arePropertiesEditable()) {
+          if (W.selectionManager.getSelectedFeatures()[0]._wmeObject.arePropertiesEditable()) {
 //        if (W.selectionManager.getSelectedFeatures()[0].model.arePropertiesEditable()) {
             $('#venue-edit-general > .external-providers-control').after(EP2html);
         } else {
