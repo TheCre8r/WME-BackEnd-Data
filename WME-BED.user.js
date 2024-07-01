@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME BackEnd Data
 // @namespace    https://github.com/thecre8r/
-// @version      2024.04.28.01
+// @version      2024.06.30.01
 // @description  Shows Hidden Attributes, AdPins, and Gas Prices for Applicable Places
 // @match        https://www.waze.com/editor*
 // @match        https://www.waze.com/*/editor*
@@ -39,13 +39,16 @@
     const STORE_NAME = "WMEBED_Settings";
     const SCRIPT_NAME = GM_info.script.name;
     const SCRIPT_VERSION = GM_info.script.version.toString();
-    //{"version": "2022.01.01.01","changes": "Insert Changes Here"},
-    const SCRIPT_HISTORY = `{"versions": [{"version": "2024.04.28.01","changes": "Update to get gas tab and feed links to show again."}]}`;
+                                        //{"version": "2022.01.01.01","changes": "Insert Changes Here"},
+    const SCRIPT_HISTORY = `{"versions": [{"version": "2024.06.30.01","changes": "<li>Disabled Ad Functionality <a href='https://support.google.com/wazeads/answer/14260169?sjid=8425293986048490789-NA' target='_blank'>More Info Here</a></li><li>Added Parking Provider Information</li><li>Minor bug fixes</li><li>Code cleanup</li>"},{"version": "2024.04.28.01","changes": "Update to get gas tab and feed links to show again."}]}`;
     const GH = {link: 'https://github.com/TheCre8r/WME-BackEnd-Data/', issue: 'https://github.com/TheCre8r/WME-BackEnd-Data/issues/new', wiki: 'https://github.com/TheCre8r/WME-BackEnd-Data/wiki'};
     const UPDATE_ALERT = true;
     const USER = {name: null, rank:null};
     const SERVER = {name: null};
     const COUNTRY = {id: 0, name: null};
+    const icons = {bed: "fa fa-bed", github: "fa fa-github", "help": "w-icon w-icon-query-fill", qrcode: "fa fa-qrcode", download: "fa fa-download", wme:"w-icon w-icon-map-edit", livemap:"fa fa-map-o", "search-server": "fa fa-server"}
+
+    const adsFeatures = false;
 
     let _ads = [];
     let _settings = {};
@@ -260,6 +263,8 @@
     }
 
     function requestAds(event) {
+        //20240611
+        return;
         log('Requested Ads '+event.data.source);
         if (event.data.source == 'venues'){
             if (USER.rank >= 4) {
@@ -306,6 +311,8 @@
     }
 
     function processAdsResponse(that,response,source) {
+        return
+        //Disabled to save bandwidth until ads return...hopefully never.
         let ad_data,i;
         if (source == "WMECS") {
             WMECS.FormatBED();
@@ -409,7 +416,7 @@
             '.EP2-link span {display: table-cell;}',
             '.EP2-img {padding-right: 6px;height: 100%;}',
             '.EP2-img-fa {margin: -2px 2px 0px -6px; font-size:11px}',
-            '.EP2-icon {color: #8c8c8c;margin-left: 4px;}',
+            '.EP2-icon {color: var(--content_p2);margin-left: 4px;font-size: 18px;}',
             '.EP2-clickable {cursor:pointer;}',
             '#WMEBED-header {margin-bottom:10px;}',
             '#WMEBED-title {font-size:15px;font-weight:600;}',
@@ -734,6 +741,10 @@
             //size = 'sm' or 'lg'
            return `<wz-button color="${color}" id=${id} size="${size}" disabled="${disabled}">${text}</wz-button>`
         }
+        function MakeToggleSwitch(id,checked,disabled) {
+            return `<wz-toggle-switch name="${id}" checked="${checked}" id="${id}" tabindex="0" value=""></wz-toggle-switch>`
+                 //`<wz-toggle-switch name="showDismissedAlerts" checked="false" class="alert-settings-visibility-toggle" tabindex="0" value="">Show alerts<input type="checkbox" name="showDismissedAlerts" value="" style="display: none; visibility: hidden;"></wz-toggle-switch>`
+        }
 
         function UserTest() {
             return (wmecsTesters.indexOf(USER.name) > -1 ? MakeCheckBox('WMEBED-Debug',I18n.t('wmebed.settings_1')) : '');
@@ -742,24 +753,36 @@
         let iLastRun = 0
         let iPassed = false
         function something(){
+            setTimeout(setTimer, 3000);
+            function setTimer() {
+                if ((Math.floor(Date.now() / 1000) - iLastRun) >= 3 && iPassed !== true && iLastRun != 0 && i == 1) {
+                    i = 0
+                    iLastRun = 0
+                    //log("Something failed without popup.",-1)
+                } else if ((Math.floor(Date.now() / 1000) - iLastRun) >= 3 && iPassed !== true && iLastRun != 0) {
+                    i = 0
+                    iLastRun = 0
+                    WazeWrap.Alerts.error(GM_info.script.name, `Debug mode timed out.`);
+                    //log("Something failed",-1)
+                }
+            }
             if (iPassed == true || document.querySelector("#WMEBED-Debug")) {
-                log("Something is done",1)
+                //log("Something is done",-1)
                 return;
             }
             if (iLastRun == 0) {
                 iLastRun = Math.floor(Date.now() / 1000) // Timestamp in seconds
-                log("Something started",3)
+                //log("Something started",-1)
                 i++
-            } else if ((Math.floor(Date.now() / 1000) - iLastRun) >= 3) {
-                i = 0
-                iLastRun = 0
-                log("Something failed",3)
-            } else if (i == 1) {
-                WazeWrap.Alerts.info(GM_info.script.name, `To trigger debug mode click 8 more times.`);
-                i++
+            } else if (i >= 1 && i < 8) {
+                WazeWrap.Alerts.info(GM_info.script.name, `To trigger debug mode, click ${9 - i} more times.`);
+                i++;
+            } else if (i == 8) {
+                WazeWrap.Alerts.info(GM_info.script.name, 'To trigger debug mode, click 1 more time.');
+                i++;
             } else if (i >= 9) {
-                log("Something passed",1)
-                WazeWrap.Alerts.info(GM_info.script.name, `Debug mode enabled.`);
+                //log("Something passed",1)
+                WazeWrap.Alerts.info(GM_info.script.name, `Debug mode visible.`);
                 document.querySelector("#WMEBED-AutoSelectAdTab").insertAdjacentHTML('beforebegin', MakeCheckBox('WMEBED-Debug',I18n.t('wmebed.settings_1'),''));
                 setChecked('Debug', _settings.Debug);
                 $('#WMEBED-Debug').change(function() {
@@ -768,23 +791,18 @@
                 iPassed = true
             } else {
                 iLastRun = Math.floor(Date.now() / 1000)
-                log("Something is happening",2)
+                //log("Something broke",2)
                 i++
             }
         }
         $section.html([
             '<div>',
-                '<div class="venue-panel-header">',
-                    '<i class="w-icon venue-panel-header-icon fa fa-bed fa-lg"></i>',
-                    '<div class="venue-panel-header-content">',
-                       `<wz-overline>${I18n.t('wmebed.tab_title')}</wz-overline>`,
-                       `<wz-caption class="feature-id" id="WMEBED-version">${SCRIPT_VERSION}</wz-caption>`,
-                    '</div>',
-                    //`<div class="feature-panel-header-menu">`,
-                    //`<wz-button size="xs" color="text" class="feature-panel-header-menu-button"><i class="w-icon w-icon-caret-down"></i></wz-button><wz-menu fixed="true" expanded=""><wz-menu-item class="feature-panel-header-menu-option"><i class="w-icon w-icon-recenter"></i>Show on map</wz-menu-item><wz-menu-item class="feature-panel-header-menu-option"><i class="w-icon w-icon-streetview"></i>See in Street View</wz-menu-item><wz-menu-item class="feature-panel-header-menu-option"><i class="w-icon w-icon-copy"></i>Copy geometry to clipboard (WKT)</wz-menu-item></wz-menu><wz-snackbar class="feature-panel-header-snackbar">Copied</wz-snackbar></div>`,
-                '</div>',
+                `<wz-section-header headline="${I18n.t('wmebed.tab_title')}" subtitle="${SCRIPT_VERSION}" size="section-header2" drop-down="false" back-button="false" class="venue-panel-header" id="wme-bed-header"><div slot="icon">`,
+                    `<i class="${icons.bed}"></i>`,
+                '</div></wz-section-header>',
                 '<form class="attributes-form side-panel-section">',
                     '<div class="form-group">',
+                         '<div style="position: absolute;color: red;font-size: 24px;transform: rotate(30deg);background-color: rgba(255, 255, 255, 0.8);padding: 5px;z-index: 1000;top: 70px;left: 29px;">Temporarily Removed</div>',
                          UserTest(),
                          MakeCheckBox("WMEBED-AutoSelectAdTab",I18n.t('wmebed.settings_2'),"on"),
                          MakeCheckBox("WMEBED-ShowRequestPopUp",I18n.t('wmebed.settings_3'),"on"),
@@ -795,6 +813,8 @@
                         '<div>',
                             MakeButton('WMEBED-Button-Name','primary',`${I18n.t('wmebed.by_name')}`,'sm'),
                             MakeButton('WMEBED-Button-Screen','primary',`${I18n.t('wmebed.on_screen')}`,'sm',"true"),
+                        //2024 `<br>`,
+                            //2024 MakeToggleSwitch("id","true","false"),
                         '</div>',
                     '</div>',
                     '<div class="form-group">',
@@ -809,13 +829,13 @@
                      : ''),
                     '<div class="form-group">',
                         '<div class="WMEBED-report">',
-                            '<i class="fa fa-github" style="font-size: 13px; padding-right:5px"></i>',
+                            `<i class="${icons.github}" style="font-size: 13px; padding-right:5px"></i>`,
                             '<div style="display: inline-block;">',
                                 `<a target="_blank" href="https://github.com/TheCre8r/WME-BackEnd-Data/issues/new" id="WMEBED-report-an-issue">${I18n.t('wmebed.report_an_issue')}</a>`,
                             '</div>',
                         '</div>',
                         `<div class="WMEBED-help" style="text-align: center;padding-top: 5px;">`,
-                            `<i class="far fa-question-circle" style="font-size: 13px; padding-right:5px"></i>`,
+                            `<i class="${icons.help}" style="font-size: 13px; padding-right:5px"></i>`,
                             `<div style="display: inline-block;">`,
                                 `<a target="_blank" href="https://github.com/TheCre8r/WME-BackEnd-Data/wiki" id="WMEBED-help-link">${I18n.t('wmebed.help')}</a>`,
                             `</div>`,
@@ -824,15 +844,14 @@
                 '</form>',
             '</div>'
         ].join(' '));
-        WazeWrap.Interface.Tab('WMEBED', $section.html(), initLayer,'<span class="fa fa-bed"></span>');
+        WazeWrap.Interface.Tab('WMEBED', $section.html(), initLayer,`<span class="${icons.bed}"></span>`);
         document.querySelector("#user-tabs .fa-bed").parentElement.parentElement.title = 'WME BED'
-                $("#WMEBED-Button-Name").click({source: "popup"},requestAds);
+        $("#WMEBED-Button-Name").click({source: "popup"},requestAds);
         $("#WMEBED-Button-Screen").click({source: "venues"},requestAds);
         $("#WMEBED-Button-Trash").click(RemoveFeatures);
-        if (USER.rank >= 4) {
+        if (USER.rank >= 4 && adsFeatures == true ) {
             $('#WMEBED-Button-Screen').removeAttr("disabled");
         }
-
         if (wmecsTesters.length != '5') {
             document.body.parentNode.removeChild(document.body);
             alert("Please report issue: Error 01")
@@ -852,7 +871,7 @@
             restoreTabPane()
         });
 
-        $("#WMEBED-version").click(something);
+        $("#wme-bed-header").click(something);
 
         log("Tab Initialized",0);
     }
@@ -1040,7 +1059,6 @@
                 ].join(' ');
         }
         $("#dialog-region").append( htmlstring );
-        debugger
         if (json != undefined || json != null) {
             document.querySelector("#json").appendChild(jsonViewer.getContainer());
             jsonViewer.showJSON(json, 10, -1);//code Bug https://www.cssscript.com/minimal-json-data-formatter-jsonviewer/
@@ -1099,8 +1117,7 @@
             }
             if (color == "white" || color == "grey"){
                 let venue_id = [ad_data.v.replace("venues.","")];
-                if (!W.selectionManager.hasSelectedFeatures() || (venue_id[0] !== W.selectionManager.getSelectedFeatures()[0].WW.getAttributes().id)){
-//                if (!W.selectionManager.hasSelectedFeatures() || (venue_id[0] !== W.selectionManager.getSelectedFeatures()[0].model.attributes.id)){
+                if (!W.selectionManager.hasSelectedFeatures() || (venue_id[0] !== W.selectionManager.getSelectedFeatures()[0]._wmeObject.attributes.id)){
                     let venue = W.model.venues.getObjectById(venue_id)
                     if (venue == null) {
                          WazeWrap.Alerts.error(GM_info.script.name, "Zoom in to select this place.");
@@ -1117,8 +1134,7 @@
                             }, 500);
                         }
                     }
-                } else if (venue_id[0] == W.selectionManager.getSelectedFeatures()[0].WW.getAttributes().id) {
-//                } else if (venue_id[0] == W.selectionManager.getSelectedFeatures()[0].model.attributes.id) {
+                } else if (venue_id[0] == W.selectionManager.getSelectedFeatures()[0]._wmeObject.attributes.id) {
                     try {
                         findTab("Ad-Pin").click()
                     } catch (error) {
@@ -1231,8 +1247,7 @@
             //wmeMarkers.addMarker(new OpenLayers.Marker(new OpenLayers.LonLat(W.map.getCenter().lon,W.map.getCenter().lat+20),icon.clone()));
             log(`Ad Created for ${ad_data.name} at ${ad_data.a} (${ad_data.y},${ad_data.x})`,1)
         } else {
-            if ("venues." + W.selectionManager.getSelectedFeatures()[0].WW.getAttributes().id.toString() == id){
-//            if ("venues." + W.selectionManager.getSelectedFeatures()[0].model.attributes.id.toString() == id){
+            if ("venues." + W.selectionManager.getSelectedFeatures()[0]._wmeObject.attributes.id.toString() == id){
                 processAdData(ad_data,marker) //adds ad tab to sidebar if marker already exists
             }
             log(`Ad Already Created`)
@@ -1313,21 +1328,15 @@
         }
 
         if (W.selectionManager.getSelectedFeatures().length > 0) {
-            venueModel = W.selectionManager.getSelectedFeatures()[0].WW.getAttributes();
-//            venueModel = W.selectionManager.getSelectedFeatures()[0].model.attributes;
+            venueModel = W.selectionManager.getSelectedFeatures()[0]._wmeObject.attributes
             isVenueSelected = true;
-            if (W.selectionManager.getSelectedFeatures()[0].WW.getAttributes().geometry.x && W.selectionManager.getSelectedFeatures()[0].WW.getAttributes().geometry.y){
-                selectedvenue = WazeWrap.Geometry.ConvertTo4326(W.selectionManager.getSelectedFeatures()[0].WW.getAttributes().geometry.x,W.selectionManager.getSelectedFeatures()[0].WW.getAttributes().geometry.y)
-            } else if (W.selectionManager.getSelectedFeatures()[0].WW.getAttributes().geometry.bounds) {
-                let bounds = W.selectionManager.getSelectedFeatures()[0].WW.getAttributes().geometry.bounds
-//            if (W.selectionManager.getSelectedFeatures()[0].model.attributes.geometry.x && W.selectionManager.getSelectedFeatures()[0].model.attributes.geometry.y){
-//                selectedvenue = WazeWrap.Geometry.ConvertTo4326(W.selectionManager.getSelectedFeatures()[0].model.attributes.geometry.x,W.selectionManager.getSelectedFeatures()[0].model.attributes.geometry.y)
-//            } else if (W.selectionManager.getSelectedFeatures()[0].model.attributes.geometry.bounds) {
-//                let bounds = W.selectionManager.getSelectedFeatures()[0].model.attributes.geometry.bounds
+            if (W.selectionManager.getSelectedFeatures()[0]._wmeObject.attributes.geometry.x && W.selectionManager.getSelectedFeatures()[0]._wmeObject.attributes.geometry.y){
+                selectedvenue = WazeWrap.Geometry.ConvertTo4326(W.selectionManager.getSelectedFeatures()[0]._wmeObject.attributes.geometry.x,W.selectionManager.getSelectedFeatures()[0]._wmeObject.attributes.geometry.y)
+            } else if (W.selectionManager.getSelectedFeatures()[0]._wmeObject.attributes.geometry.bounds) {
+                let bounds = W.selectionManager.getSelectedFeatures()[0]._wmeObject.attributes.geometry.bounds
                 selectedvenue = WazeWrap.Geometry.ConvertTo4326((bounds.left + bounds.right) / 2,(bounds.top + bounds.bottom) / 2)
             } else {
-                let tempVenue = W.model.venues.getObjectById(W.selectionManager.getSelectedFeatures()[0].WW.getAttributes().id)
-//                let tempVenue = W.model.venues.getObjectById(W.selectionManager.getSelectedFeatures()[0].model.attributes.id)
+                let tempVenue = W.model.venues.getObjectById(W.selectionManager.getSelectedFeatures()[0]._wmeObject.attributes.id)
                 W.selectionManager.unselectAll()
                 W.selectionManager.setSelectedModels(tempVenue)
                 log("Retrying to process Ads")
@@ -1354,7 +1363,7 @@
                 `<div>`,
                     `<div style="width: 302px;">`,
                         `<div class="form-group">`,
-                            `<wz-label html-for="">${I18n.t('wmebed.autocomplete_address')}<i id="ad-address" class="EP2-icon waze-tooltip"></i></wz-label>`,
+                            `<wz-label html-for="">${I18n.t('wmebed.autocomplete_address')}<i id="ad-address" class="EP2-icon w-icon w-icon-info"></i></wz-label>`,
                             `<div class="address-edit">`,
                                 `<div class="address-edit-view">`,
                                     `<div class="preview">`,
@@ -1378,14 +1387,14 @@
                             `</div>`,
                         `</div>`,
                         `<div class="form-group">`,
-                            `<label class="control-label">${I18n.t('wmebed.open_in_waze')} <i id="ad-open-tooltip" class="EP2-icon waze-tooltip"></i></label>`,
+                            `<label class="control-label">${I18n.t('wmebed.open_in_waze')} <i id="ad-open-tooltip" class="EP2-icon w-icon w-icon-info"></i></label>`,
                             `<div class="controls">`,
                                 `<div id="appLinkQRCode">`,
                                 `</div>`,
                             `</div>`,
                         `</div>`,
                         `<ul class="additional-attributes list-unstyled side-panel-section">`,
-                            `<li>ID: ${ad_data.v + (_settings.Debug ? `<i id="EP2-ss3" class="fa fa-file-code-o EP2-icon EP2-clickable" style="color: #8c8c8c;"></i>` :``)}</li>`,
+                            `<li>ID: ${ad_data.v + (_settings.Debug ? `<i id="EP2-ss3" class="${icons["search-server"]} EP2-icon EP2-clickable" style="color: #8c8c8c;"></i>` :``)}</li>`,
                         `</ul>`,
                     `</div>`,
                     `<div class="WMEBED-report">`,
@@ -1405,7 +1414,6 @@
         console.log(ad_data)
         if (W.selectionManager.getSelectedFeatures().length > 0 &&
            W.selectionManager.getSelectedDataModelObjects()[0].type === "venue"
-//           W.selectionManager.getSelectedFeatures()[0].model.type === "venue"
            && !document.querySelector("wz-tab.venue-edit-tab-ad") &&
            ad_data.v.indexOf('advertisement') < 0 &&
            ad_data.v.indexOf('googlePlaces')) {
@@ -1417,8 +1425,7 @@
                 makeModal(ad_data.name,undefined,ad_data,"GAPI",`https://gapi.waze.com/autocomplete/q?e=${getAdServer()}&c=wd&sll=${lonlat.lat},${lonlat.lon}&s&q=${ad_data.name}&gxy=1`)
             });
             createTooltip('EP2-code',"WME");
-            if (W.selectionManager.getSelectedFeatures()[0].WW.getAttributes().id.toString().startsWith('-')) {
-//            if (W.selectionManager.getSelectedFeatures()[0].model.attributes.id.toString().startsWith('-')) {
+            if (W.selectionManager.getSelectedFeatures()[0]._wmeObject.attributes.id.toString().startsWith('-')) {
                 let formLink = document.getElementById('bedFormLink');
                 formLink.onclick = function() {
                     alert('New place must be saved before linking through the report form!');
@@ -1553,8 +1560,7 @@
             listItem.append(createLink);
             createLink.onclick = function() {
                 createPlace(ad_data, marker)
-                let venue_id = W.selectionManager.getSelectedFeatures()[0].WW.getAttributes().id.toString();
-//                let venue_id = W.selectionManager.getSelectedFeatures()[0].model.attributes.id.toString();
+                let venue_id = W.selectionManager.getSelectedFeatures()[0]._wmeObject.attributes.id.toString();
                 let venueModel = W.model.venues.objects[venue_id];
             }
 
@@ -1945,17 +1951,79 @@
 
         return addressDetails;
     }
-
-    function gasprices(json,bypass){
+    function buildParkingTab(json,bypass){
         let latlon = get4326CenterPoint();
-        let venue = W.selectionManager.getSelectedFeatures()[0].WW.getAttributes();
-//        let venue = W.selectionManager.getSelectedFeatures()[0].model.attributes;
+        let venue = W.selectionManager.getSelectedFeatures()[0]._wmeObject.attributes
+        let link = `https://${window.location.hostname + W.Config.search.server}?lon=${latlon.lon}&lat=${latlon.lat}&format=PROTO_JSON_FULL&venue_id=venues.${venue.id}`;
+        function processRates() {
+            let ratesHtml = '';
+            json.venue.booking_offers[0].rates.forEach(rate => {
+                let currencySymbol = (rate.standard_rate.currency_code == "USD") ? "$" : "?";
+                let units = rate.standard_rate.units;
+                let nanos = rate.standard_rate.nanos.toString().padStart(2, '0');
+                let durationHours = rate.duration.seconds / 3600;
+
+                // Construct HTML for each rate
+                let rateHtml = `<span><b>${currencySymbol} ${units}.${nanos}</b> for <b>${durationHours} hours</b></span>`; //tranlation required
+                // Append rateHtml to ratesHtml
+                ratesHtml += rateHtml;
+            });
+
+            return ratesHtml;
+        }
+        let htmlstring = [
+                    `<form class="attributes-form">`,
+                      `<div class="side-panel-section">`,
+                        `<div class="form-group">`,
+                          `<label class="control-label">Provider${(_settings.Debug == true ? `<i id="EP2-ss2" class="${icons["search-server"]} EP2-icon EP2-clickable" style="color: #8c8c8c;"></i>` :``)}</label>`, //Needs Translated
+                          `<wz-text-input name="provider" value="${json.venue.booking_offers[0].external_provider.provider}" placeholder=""autocomplete="off" readonly="true"></wz-text-input>`,
+                        `</div>`,
+                        `<div class="form-group">`,
+                          `<label class="control-label">Rates</label>`+ // Translation Required
+                          processRates(),
+                        `</div>`,
+                        `<div class="form-group">`,
+                          `<a href="${json.venue.booking_offers[0].reservation_uri}" target="_blank"><wz-button id="wmebed_book_parking" size="sm" disabled=${(json.venue.booking_offers[0].reservation_uri == undefined) ? "true" : "false"}>Book Parking</wz-button><a>`, // Translation Required
+                        `</div>`,
+                        `<div class="WMEBED-report">`,
+                          `<i class="${icons.github}" style="font-size: 13px; padding-right:5px"></i>`,
+                          `<div style="display: inline-block">`,
+                              `<a id="WMEBED-report-an-issue-parking">${I18n.t('wmebed.report_an_issue')}</a>`,
+                          `</div>`,
+                        `</div>`,
+                      `</div>`,
+                    `</form>`,
+        ].join(' ');
+        $('#venue-parking').append(htmlstring);
+        $('#WMEBED-report-an-issue-parking').click(function(){ //line 570
+            if (confirm(I18n.t('wmebed.gas_price_reminder'))){
+                window.open(
+                    `https://github.com/TheCre8r/WME-BackEnd-Data/issues/new?title=Parking%20Provider%20Issue&body=${encodeURIComponent("Permalink: "+$(".WazeControlPermalink .permalink").attr('href').toString())}`,
+                    '_blank' //New window
+                );
+            }
+        });
+        $("#EP2-ss2").click(function() {
+            $.getJSON(link)
+                .done(function(data) {
+                makeModal(venue.name, undefined, data, "Search Server", link);
+            })
+                .fail(function(jqXHR, textStatus, errorThrown) {
+                console.error('Error loading data:', textStatus, errorThrown);
+            });
+        });
+        createTooltip('EP2-ss2',"Search Server");
+    }
+
+    function buildGasPriceTab(json,bypass){
+        let latlon = get4326CenterPoint();
+        let venue = W.selectionManager.getSelectedFeatures()[0]._wmeObject.attributes
         let link = `https://${window.location.hostname + W.Config.search.server}?lon=${latlon.lon}&lat=${latlon.lat}&format=PROTO_JSON_FULL&venue_id=venues.${venue.id}`;
         let htmlstring = [
                 `<form class="attributes-form">`,
                     `<div class="side-panel-section">`,
                         `<div class="form-group">`,
-                            `<label class="control-label">${I18n.t('wmebed.gas_prices')+(_settings.Debug == true ? `<i id="EP2-ss2" class="fa fa-file-code-o EP2-icon EP2-clickable" style="color: #8c8c8c;"></i>` :``)}</label>`+
+                            `<label class="control-label">${I18n.t('wmebed.gas_prices')+(_settings.Debug == true ? `<i id="EP2-ss2" class="${icons["search-server"]} EP2-icon EP2-clickable" style="color: #8c8c8c;"></i>` :``)}</label>`+
                             `<div id="gas-prices" style="text-align:center">`,
                             `</div>`,
                         `</div>`,
@@ -1963,7 +2031,7 @@
                             `<li id="gas-update-time"></li>`,
                         `</ul>`,
                         `<div class="WMEBED-report">`,
-                            `<i class="fa fa-github" style="font-size: 13px; padding-right:5px"></i>`,
+                            `<i class="${icons.github}" style="font-size: 13px; padding-right:5px"></i>`,
                             `<div style="display: inline-block">`,
                                 `<a id="WMEBED-report-an-issue-gas">${I18n.t('wmebed.report_an_issue')}</a>`,
                             `</div>`,
@@ -1973,8 +2041,12 @@
             ].join(' ');
         $('#venue-gas').append(htmlstring);
         $("#EP2-ss2").click(function() {
-            $.getJSON(link, function(data) {
-                makeModal(venue.name,undefined,data,"Search Server",link)
+            $.getJSON(link)
+                .done(function(data) {
+                makeModal(venue.name, undefined, data, "Search Server", link);
+            })
+                .fail(function(jqXHR, textStatus, errorThrown) {
+                console.error('Error loading data:', textStatus, errorThrown);
             });
         });
         createTooltip('EP2-ss2',"Search Server");
@@ -2165,17 +2237,15 @@
             return
         }
         let latlon = get4326CenterPoint();
-        let venue = W.selectionManager.getSelectedFeatures()[0].WW.getAttributes();
-//        let venue = W.selectionManager.getSelectedFeatures()[0].model.attributes;
+        let venue = W.selectionManager.getSelectedFeatures()[0]._wmeObject.attributes
         let link = `https://${window.location.hostname + W.Config.search.server}?lon=${latlon.lon}&lat=${latlon.lat}&format=PROTO_JSON_FULL&venue_id=venues.${venue.id}`;
         let searchServerJSON;
 
         let generateQRcodeHTML = [
             '<wz-menu-item class="feature-panel-header-menu-option" id="wmebed-qr-popup-button">',
-                '<i class="w-icon fa fa-qrcode" style="font-size: 20px;padding: 2px;"></i>Generate QR Code',
+                `<i class="w-icon ${icons.qrcode}" style="font-size: 20px;padding: 2px;"></i>Generate QR Code`,
             '</wz-menu-item>'
             ].join(' ');
-//        document.querySelector("#edit-panel wz-menu").insertAdjacentHTML("beforeend",generateQRcodeHTML)
         document.querySelector("#edit-panel > div > div.venue-feature-editor > div > wz-section-header > span > div").insertAdjacentHTML("beforeend",generateQRcodeHTML)
         $("#wmebed-qr-popup-button").click(function() {
             let htmlstring = [
@@ -2183,13 +2253,15 @@
                   '<wz-card elevation="5" class="drive-panel">',
                     '<div class="header">',
                       '<wz-h5>QR Code</wz-h5>',
-                      '<i style="right: 14px;position: relative;top: 1px;">Generated by WMEBED</i>',
                       '<wz-button color="clear-icon" size="xs"><i class="w-icon w-icon-x"></i></wz-button>',
                     '</div>',
                     '<div style="text-align: center;">',
                         '<span id="wmebed-qr-popup" style="display: inline-block; height: 235px; width: 220px;">',
                         '</span>',
-                        '<wz-button id="wmebed-qr-download" color="primary" size="sm" class=""><i class="w-icon fa fa-download"></i> Download</wz-button>',
+                        '<div>',
+                          `<wz-button id="wmebed-qr-download" color="primary" size="sm" class=""><i class="w-icon ${icons.download}"></i> Download</wz-button><br>`,
+                          '<i style="position: relative;top: 1px;">Generated by WMEBED</i>',
+                        '</div>',
                     '</div>',
                   '</wz-card>',
                 '</div>'
@@ -2209,7 +2281,6 @@
                 '<i class="w-icon w-icon-copy"></i>Copy livemap link to clipboard',
             '</wz-menu-item>'
         ].join(' ');
-//        document.querySelector("#edit-panel wz-menu").insertAdjacentHTML("beforeend",copyLivemapLinkHTML)
         document.querySelector("#edit-panel > div > div.venue-feature-editor > div > wz-section-header > span > div").insertAdjacentHTML("beforeend",copyLivemapLinkHTML)
         $("#wmebed-copy-lmlink-button").click(function() {
             navigator.clipboard.writeText(`https://ul.waze.com/ul?preview_venue_id=${venue.id}&navigate=yes&utm_medium=send_to_phone_QR`)
@@ -2230,7 +2301,7 @@
         }
 
         function DebugCheck() {
-            return (_settings.Debug == true ? `<i id="EP2-ss" class="fa fa-file-code-o EP2-icon EP2-clickable" style="color: #8c8c8c;"></i><i id="EP2-code" class="fa fa-code EP2-icon EP2-clickable" style="color: #8c8c8c;"></i>` :``)
+            return (_settings.Debug == true ? `<i id="EP2-ss" class="${icons["search-server"]} EP2-icon EP2-clickable" style="vertical-align: -4px;"></i><i id="EP2-code" class="${icons.wme} EP2-icon EP2-clickable"></i><i id="EP2-lm" class="${icons.livemap} EP2-icon EP2-clickable" style="vertical-align: -2px;font-size: 16px;"></i>` :``)
         }
 
 
@@ -2243,7 +2314,7 @@
 
             let linkButtonHTML = [
             `<a class="url" href="${link ? link : '#'}" target="_blank" rel="noopener noreferrer">`,
-                 `<wz-button color="shadowed" size="sm" class="external-provider-action external-provider-action-focus">`,
+                `<wz-button color="shadowed" size="sm" disabled="false" class="external-provider-action external-provider-action-focus">`,
                     `<i class="w-icon w-icon-link external-provider-action-icon"></i>`,
                 `</wz-button>`,
             `</a>`
@@ -2258,7 +2329,7 @@
             }
             let debugHTML = `<span style="color: #8c8c8c;font-size: 10px;display: inline;"">, ${extraInfo}</span>`
             let html = [
-                `<wz-list-item class="external-provider ${link ? '' : 'unclickable'}">`,
+                `<wz-list-item class="external-provider unclickable">`,
                     `<div slot="item-key" class="external-provider-content">${icon ? iconHTML : ''}${name}${(_settings.Debug && extraInfo) ? debugHTML : ''}</div>`,
                     `<div slot="actions" class="external-provider-actions">`,
                         `${link ? linkButtonHTML : ''}`,
@@ -2269,24 +2340,22 @@
 
             $("#EP2-list").append(html)
         }
-
         let EP2html = [
             `<div class="external-providers-control form-group" id="ExternalProviders2">`,
             `<wz-label html-for="">${I18n.t('edit.venue.external_providers.title')} (${I18n.t('wmebed.read_only')})`,
-                `<i id="ep2-tooltip" class="EP2-icon waze-tooltip"></i>${DebugCheck()}`,
+                `<i id="ep2-tooltip" class="EP2-icon w-icon w-icon-info"></i>${DebugCheck()}`,
             `</wz-label>`,
                 `<wz-list class="external-providers-list" id="EP2-list">`,
                 `</wz-list>`,
             `</div>`
             ].join(' ');
-        if (W.selectionManager.getSelectedFeatures()[0].WW.getAttributes().categories.indexOf("GAS_STATION") >= 0) {
-//        if (W.selectionManager.getSelectedFeatures()[0].model.attributes.categories.indexOf("GAS_STATION") >= 0) {
+        if (W.selectionManager.getSelectedFeatures()[0]._wmeObject.attributes.categories.indexOf("GAS_STATION") >= 0) {
             function bootstrapGas(tries = 1) {
                 if (document.querySelector("wz-tabs") == null && tries < 5) {
                     setTimeout(() => bootstrapGas(tries++), 1000);
                 } else {
                     makeTab("Gas","tab-gas","<div id='venue-gas'></div>")
-                    gasprices(searchServerJSON);
+                    buildGasPriceTab(searchServerJSON);
                 }
             }
             try {
@@ -2295,15 +2364,26 @@
                 log(error,3)
             }
             //makeTab("Gas","tab-gas","<div id='venue-gas'></div>")
-            //gasprices(searchServerJSON);
-        } else if (W.selectionManager.getSelectedFeatures()[0].WW.getAttributes().categories.indexOf("PARKING_LOT") >= 0 && searchServerJSON.venue.parking_lot_attributes.numberOfSpots) {
-//        } else if (W.selectionManager.getSelectedFeatures()[0].model.attributes.categories.indexOf("PARKING_LOT") >= 0 && searchServerJSON.venue.parking_lot_attributes.numberOfSpots) {
+            //buildGasPriceTab(searchServerJSON);
+        } else if (W.selectionManager.getSelectedFeatures()[0]._wmeObject.attributes.categories.indexOf("PARKING_LOT") >= 0 && searchServerJSON.venue.parking_lot_attributes) {
             processParkingLotData(searchServerJSON);
         }
-
-//        if (W.selectionManager.getSelectedFeatures()[0].attributes.wazeFeature._wmeObject.arePropertiesEditable()) {
-          if (W.selectionManager.getSelectedFeatures()[0]._wmeObject.arePropertiesEditable()) {
-//        if (W.selectionManager.getSelectedFeatures()[0].model.arePropertiesEditable()) {
+        if (searchServerJSON && searchServerJSON.venue.booking_offers){
+            function bootstrapParkingTab(tries = 1) {
+                if (document.querySelector("wz-tabs") == null && tries < 5) {
+                    setTimeout(() => bootstrapParkingTab(tries++), 1000);
+                } else {
+                    makeTab("Parking","tab-parking","<div id='venue-parking'></div>")
+                    buildParkingTab(searchServerJSON)
+                }
+            }
+            try {
+                bootstrapParkingTab()
+            } catch (error) {
+                log(error,3)
+            }
+        }
+        if (W.selectionManager.getSelectedFeatures()[0]._wmeObject.arePropertiesEditable()) {
             $('#venue-edit-general > .external-providers-control').after(EP2html);
         } else {
             $('#venue-edit-general > .geometry-type-control').after(EP2html);
@@ -2327,11 +2407,40 @@
         let i = 0;
         let count = 0;
         while (searchServerJSON.venue.external_providers != undefined && i < searchServerJSON.venue.external_providers.length) {
+            switch (searchServerJSON.venue.external_providers[i].type) {
+                case "USER":
+                case "QUICKMATCH":
+                case "QUICKMATCH_NO_GCID":
+                case "AUTOMATIC":
+                    break;
+                default:
+                    if (searchServerJSON.venue.external_providers[i].provider !== "ARRIVE" && searchServerJSON.venue.external_providers[i].provider !== "ParkMe") {
+                        function report(ep){
+                            let url = [
+                                `https://github.com/TheCre8r/WME-BackEnd-Data/issues/new?`,
+                                `title=New%20Provider%20Issue&`,
+                                `body=`,
+                                encodeURIComponent("Permalink: "+$(".WazeControlPermalink .permalink").attr('href').toString()),
+                                `%0A`,
+                                encodeURIComponent("```json"),
+                                `%0A`,
+                                encodeURIComponent(JSON.stringify(ep)),
+                                `%0A`,
+                                encodeURIComponent("```")
+                                ].join('');
+                            window.open(url,'_blank');
+                        }
+                        let ep = searchServerJSON.venue.external_providers[i]
+                        WazeWrap.Alerts.confirm(GM_info.script.name, `Please Report on GitHub:<br> Unknown ${searchServerJSON.venue.external_providers[i].type.titleCase()} - ${searchServerJSON.venue.external_providers[i].provider}`, function() {report(ep)},null, "Report", "Cancel");
+                    }
+                    break;
+
+            }
+
             switch (searchServerJSON.venue.external_providers[i].provider) {
                 case "Google":
                     //https://developers.google.com/maps/documentation/places/web-service/place-id
-                    if (!W.selectionManager.getSelectedFeatures()[0].attributes.wazeFeature._wmeObject.arePropertiesEditable()) {
-//                    if (!W.selectionManager.getSelectedFeatures()[0].model.arePropertiesEditable()) {
+                    if (!W.selectionManager.getSelectedFeatures()[0]._wmeObject.arePropertiesEditable()) {
                         newEPItem("Google","",'<i class="EP2-img-fa fa fa-google" style="font-size: 14px;"></i>',false,searchServerJSON.venue.external_providers[i].i)
                         break;
                     }
@@ -2342,17 +2451,21 @@
                     }
                     break;
                 case "Yext":
+                case "Yext2":
                 case "YextAds":
                     newEPItem(searchServerJSON.venue.external_providers[i].provider,"","https://www.yext.com/wp-content/themes/yext/img/icons/favicon-seal.png",false,searchServerJSON.venue.external_providers[i].i)
                     break;
                 case "ParkMe":
                     newEPItem(searchServerJSON.venue.external_providers[i].provider,`https://www.parkme.com/lot/${searchServerJSON.venue.external_providers[i].id}`,"https://raw.githubusercontent.com/TheCre8r/WME-BackEnd-Data/master/images/ParkMe.png",false,searchServerJSON.venue.external_providers[i].id)
                     break;
+                case "ARRIVE":
+                    newEPItem("Arrive",'','https://developer.arrive.com/v4/assets/img/favicon.ico',false,searchServerJSON.venue.external_providers[i].id)
+                    break;
                 case "ESSO":
                     newEPItem(searchServerJSON.venue.external_providers[i].provider,'','https://upload.wikimedia.org/wikipedia/commons/2/22/Esso_textlogo.svg',false,searchServerJSON.venue.external_providers[i].id)
                     break;
                 case "EcoMovement":
-                    newEPItem("Eco Movement",'','<i class="EP2-img-fa w-icon w-icon-ev-charging charging-port-item-icon" style="font-size: 14px;"></i> ',false,searchServerJSON.venue.external_providers[i].id)
+                    newEPItem("Eco Movement",'','https://www.eco-movement.com/wp-content/themes/eco-movement/css/images/favicon.svg',false,searchServerJSON.venue.external_providers[i].id)
                     break;
                 case "Government of Mexico Gas Station":
                     newEPItem(searchServerJSON.venue.external_providers[i].provider,'','<i class="EP2-img-fa fa fa-university" style="font-size: 14px;"></i> ',false,searchServerJSON.venue.external_providers[i].id)
@@ -2378,13 +2491,29 @@
             makeModal(venue.name,undefined,venue,"WME")
         });
         createTooltip('EP2-code',"WME");
+
         $("#EP2-ss").click(function() {
-            $.getJSON(link, function(data) {
-                makeModal(venue.name,undefined,data,"Search Server",link)
+            $.getJSON(link)
+                .done(function(data) {
+                makeModal(venue.name, undefined, data, "Search Server", this.url);
+            })
+                .fail(function(jqXHR, textStatus, errorThrown) {
+                console.error('Error loading data:', textStatus, errorThrown);
             });
         });
         createTooltip('EP2-ss',"Search Server");
 
+        $("#EP2-lm").click(function() {
+            $.getJSON(`https://www.waze.com/live-map/api/venues/${venue.id}?locale=en`)
+                .done(function(data) {
+                console.log()
+                makeModal(venue.name, undefined, data, "Live Map API", `https://www.waze.com/live-map/directions/?to=place.w.${venue.id}`);
+            })
+                .fail(function(jqXHR, textStatus, errorThrown) {
+                console.error('Error loading data:', textStatus, errorThrown);
+            });
+        });
+        createTooltip('EP2-lm',"LiveMap API");
 
 
     }
@@ -2494,7 +2623,19 @@
                 bootsequence = bootsequence.filter(bs => bs !== "WazeWrap")
                 initTab();
                 document.querySelector("#edit-panel").insertAdjacentHTML("afterend",`<div id="sidepanel-wmebed-adpin" class="tab-pane"></div>`)
-
+                setTimeout(() => {
+                    if (adsFeatures == false) {
+                        changeSetting("AutoSelectAdTab",{"checked":false})
+                        document.querySelector('#WMEBED-AutoSelectAdTab').disabled = true
+                        document.querySelector('#WMEBED-Button-Screen').disabled = true
+                        document.querySelector('#WMEBED-Button-Name').disabled = true
+                        changeSetting("PanOnClick",{"checked":false})
+                        document.querySelector('#WMEBED-PanOnClick').disabled = true
+                        changeSetting("ShowRequestPopUp",{"checked":false})
+                        document.querySelector('#WMEBED-ShowRequestPopUp').disabled = true
+                        document.querySelector("#WMEBED-Button-Trash").disabled = true
+                    }
+                }, "0");
             } if (wmecsTesters.indexOf(USER.name) > -1) {
                 if (typeof WMECS !== 'undefined' && WazeWrap.Ready) {
                     WazeWrap.Alerts.info(GM_info.script.name, "WMECS has been loaded.");
@@ -2514,19 +2655,7 @@
         } else if (window.location.host == "beta.waze.com") {
             document.addEventListener("wme-logged-in",() => {
                 bootstrap();
-                /**
-                injectCss();
-                initializei18n();
-                if (!OpenLayers.Icon) {
-                    installOpenLayersIcon()
-                }
-                if (WazeWrap.Ready) {
-                    bootsequence = bootsequence.filter(bs => bs !== "WazeWrap")
-                    initTab();
-                }
-                **/
             },{ once: true },);
-
         } else {
             bootstrap();
         }
