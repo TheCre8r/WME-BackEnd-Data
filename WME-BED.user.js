@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME BackEnd Data
 // @namespace    https://github.com/thecre8r/
-// @version      2024.06.30.01
+// @version      2024.07.07.01
 // @description  Shows Hidden Attributes, AdPins, and Gas Prices for Applicable Places
 // @match        https://www.waze.com/editor*
 // @match        https://www.waze.com/*/editor*
@@ -39,8 +39,8 @@
     const STORE_NAME = "WMEBED_Settings";
     const SCRIPT_NAME = GM_info.script.name;
     const SCRIPT_VERSION = GM_info.script.version.toString();
-                                        //{"version": "2022.01.01.01","changes": "Insert Changes Here"},
-    const SCRIPT_HISTORY = `{"versions": [{"version": "2024.06.30.01","changes": "<li>Disabled Ad Functionality <a href='https://support.google.com/wazeads/answer/14260169?sjid=8425293986048490789-NA' target='_blank'>More Info Here</a></li><li>Added Parking Provider Information</li><li>Minor bug fixes</li><li>Code cleanup</li>"},{"version": "2024.04.28.01","changes": "Update to get gas tab and feed links to show again."}]}`;
+                                        //{"version": "2024.07.07.01","changes": "Insert Changes Here"},
+    const SCRIPT_HISTORY = `{"versions": [{"version": "2024.07.07.01","changes": "Closed <a href='https://github.com/TheCre8r/WME-BackEnd-Data/issues/39' target='_blank'>GitHub Issue 39</a>"},{"version": "2024.06.30.01","changes": "<li>Disabled Ad Functionality <a href='https://support.google.com/wazeads/answer/14260169?sjid=8425293986048490789-NA' target='_blank'>More Info Here</a></li><li>Added Parking Provider Information</li><li>Minor bug fixes</li><li>Code cleanup</li>"},{"version": "2024.04.28.01","changes": "Update to get gas tab and feed links to show again."}]}`;
     const GH = {link: 'https://github.com/TheCre8r/WME-BackEnd-Data/', issue: 'https://github.com/TheCre8r/WME-BackEnd-Data/issues/new', wiki: 'https://github.com/TheCre8r/WME-BackEnd-Data/wiki'};
     const UPDATE_ALERT = true;
     const USER = {name: null, rank:null};
@@ -2414,7 +2414,7 @@
                 case "AUTOMATIC":
                     break;
                 default:
-                    if (searchServerJSON.venue.external_providers[i].provider !== "ARRIVE" && searchServerJSON.venue.external_providers[i].provider !== "ParkMe") {
+                    if (searchServerJSON.venue.external_providers[i].provider !== "ARRIVE" && searchServerJSON.venue.external_providers[i].provider !== "ParkMe" && searchServerJSON.venue.external_providers[i].provider !== "Google") {
                         function report(ep){
                             let url = [
                                 `https://github.com/TheCre8r/WME-BackEnd-Data/issues/new?`,
