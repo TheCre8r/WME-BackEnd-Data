@@ -1,7 +1,7 @@
 // ==UserScript==
-// @name         WME BackEnd Data
+// @name         WME BackEnd Data (WME SDK)
 // @namespace    https://github.com/thecre8r/
-// @version      2024.07.07.01
+// @version      2024.08.07.01
 // @description  Shows Hidden Attributes, AdPins, and Gas Prices for Applicable Places
 // @match        https://www.waze.com/editor*
 // @match        https://www.waze.com/*/editor*
@@ -22,6 +22,7 @@
 // ==/UserScript==
 
 /* global W */
+/* global getWmeSdk */
 /* global OpenLayers */
 /* ecmaVersion 2017 */
 /* global $ */
@@ -33,20 +34,31 @@
 /* global QRCodeStyling */
 /* global Backbone */
 /* global JSONViewer */
-
 (function() {
     'use strict';
     const STORE_NAME = "WMEBED_Settings";
     const SCRIPT_NAME = GM_info.script.name;
+    const SCRIPT_ID = SCRIPT_NAME.replace(/[^a-zA-Z0-9\s]/g, '').replace(/\s+/g, '-').toLowerCase();
     const SCRIPT_VERSION = GM_info.script.version.toString();
                                         //{"version": "2024.07.07.01","changes": "Insert Changes Here"},
     const SCRIPT_HISTORY = `{"versions": [{"version": "2024.07.07.01","changes": "Closed <a href='https://github.com/TheCre8r/WME-BackEnd-Data/issues/39' target='_blank'>GitHub Issue 39</a>"},{"version": "2024.06.30.01","changes": "<li>Disabled Ad Functionality <a href='https://support.google.com/wazeads/answer/14260169?sjid=8425293986048490789-NA' target='_blank'>More Info Here</a></li><li>Added Parking Provider Information</li><li>Minor bug fixes</li><li>Code cleanup</li>"},{"version": "2024.04.28.01","changes": "Update to get gas tab and feed links to show again."}]}`;
-    const GH = {link: 'https://github.com/TheCre8r/WME-BackEnd-Data/', issue: 'https://github.com/TheCre8r/WME-BackEnd-Data/issues/new', wiki: 'https://github.com/TheCre8r/WME-BackEnd-Data/wiki'};
     const UPDATE_ALERT = true;
     const USER = {name: null, rank:null};
     const SERVER = {name: null};
     const COUNTRY = {id: 0, name: null};
-    const icons = {bed: "fa fa-bed", github: "fa fa-github", "help": "w-icon w-icon-query-fill", qrcode: "fa fa-qrcode", download: "fa fa-download", wme:"w-icon w-icon-map-edit", livemap:"fa fa-map-o", "search-server": "fa fa-server"}
+
+    const GH = {link: 'https://github.com/TheCre8r/WME-BackEnd-Data/', issue: 'https://github.com/TheCre8r/WME-BackEnd-Data/issues/new', wiki: 'https://github.com/TheCre8r/WME-BackEnd-Data/wiki'};
+
+    const icons = {
+        bed: "fa fa-bed",
+        github: "fa fa-github",
+        help: "w-icon w-icon-query-fill",
+        qrcode: "fa fa-qrcode",
+        download: "fa fa-download",
+        wme: "w-icon w-icon-map-edit",
+        livemap: "fa fa-map-o",
+        "search-server": "fa fa-server"
+    }
 
     const adsFeatures = false;
 
@@ -2603,7 +2615,12 @@
     }
 
     let bootsequence = ["DOM","I18n","Waze","WazeWrap","OpenLayers","WMECS"];
-    function bootstrap(tries = 1) {
+    function bootstrap(source,tries = 1) {
+        log(`Started from ${source}`)
+        if (window.location.host == "beta.waze.com") {
+            const wmeSDK = getWmeSdk({scriptId: SCRIPT_ID, scriptName: SCRIPT_NAME});
+            log("wmeSDK  assigned")
+        }
         if (bootsequence.length > 0) {
             log("Waiting on " + bootsequence.join(', '),0)
             if (bootsequence.indexOf("DOM") > -1) {
@@ -2645,7 +2662,7 @@
             } else if (bootsequence.indexOf("WMECS") > -1) {
                 bootsequence = bootsequence.filter(bs => bs !== "WMECS")
             }
-            setTimeout(() => bootstrap(tries++), 400);
+            setTimeout(() => bootstrap("retry",tries++), 400);
         }
     }
     function detectHost() {
@@ -2653,11 +2670,17 @@
             log('Google Form Detected');
             bootstrapFillForm();
         } else if (window.location.host == "beta.waze.com") {
-            document.addEventListener("wme-logged-in",() => {
-                bootstrap();
-            },{ once: true },);
+                if (window.getWmeSdk) {
+                    bootstrap("getWmeSdk");
+                } else {
+                    document.addEventListener("wme-initialized", () => {
+                        bootstrap("wme-initialized");
+                    }, {
+                        once: true,
+                    });
+                }
         } else {
-            bootstrap();
+            bootstrap("production");
         }
     }
     detectHost();
